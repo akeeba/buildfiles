@@ -123,12 +123,17 @@ class LinkTask extends SymlinkTask
 
 		$this->log('Linking (' . $type .'): ' . $from . ' to ' . $to, Project::MSG_INFO);
 
-		if($type == 'symlink') {
+		if($type == 'symlink')
+		{
 			$res = @symlink($from, $to);
-		} elseif($type == 'hardlink') {
+		}
+		elseif($type == 'hardlink')
+		{
 			$res = @link($from, $to);
 		}
-		if(!$res) {
+
+		if(!$res)
+		{
 			if($type == 'symlink') {
 				$this->log('Failed symlink: ' . $to, Project::MSG_ERR);
 			} elseif($type == 'hardlink') {
@@ -140,34 +145,39 @@ class LinkTask extends SymlinkTask
 	/**
 	 * Translates the path for Windows.
 	 *
-	 * @param $p_path
+	 * @param 	$path			The untranslated path.
 	 *
-	 * @return mixed|string
+	 * @return 	mixed|string	The translated path.
+	 *
+	 * @see		http://en.wikipedia.org/wiki/Path_(computing)
 	 */
-	protected function TranslateWinPath($p_path)
+	protected function TranslateWinPath($path)
 	{
-		$is_unc = false;
+		// Initialise the good and bad directory separators
+		$DsGood = IS_WINDOWS ? '\\' : '/';
+		$DsBad  = IS_WINDOWS ? '/' : '\\';
 
 		if (IS_WINDOWS)
 		{
-			// Is this a UNC path?
-			$is_unc = (substr($p_path, 0, 2) == '\\\\') || (substr($p_path, 0, 2) == '//');
-			// Change potential windows directory separator
-			if ((strpos($p_path, '\\') > 0) || (substr($p_path, 0, 1) == '\\')){
-				$p_path = strtr($p_path, '\\', '/');
+			// Fix potential incorrect Windows directory separator
+			if ((strpos($path, $DsBad) > 0) || (substr($path, 0, 1) == $DsBad)){
+				$path = strtr($path, $DsBad, $DsGood);
+			}
+
+			// Is this an UNC path?
+			$is_unc = (substr($path, 0, 2) == ($DsGood . $DsGood));
+
+			// Fix UNC paths
+			if ($is_unc)
+			{
+				$path = $DsGood . $DsGood .ltrim($path, $DsGood);
 			}
 		}
 
 		// Remove multiple slashes
-		$p_path = str_replace('///','/',$p_path);
-		$p_path = str_replace('//','/',$p_path);
+		$path = str_replace('///', '/', $path);
+		$path = str_replace('//', '/', $path);
 
-		// Fix UNC paths
-		if($is_unc)
-		{
-			$p_path = '//'.ltrim($p_path,'/');
-		}
-
-		return $p_path;
+		return $path;
 	}
 }
