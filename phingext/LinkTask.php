@@ -121,6 +121,13 @@ class LinkTask extends SymlinkTask
 			}
 		}
 
+		// Create nested directory if necessarily
+		$dirTo = dirname($to);
+		if (!is_dir($dirTo) && !is_link($dirTo) && !file_exists($dirTo))
+		{
+			mkdir($dirTo, 0755, true);
+		}
+
 		$this->log('Linking (' . $type .'): ' . $from . ' to ' . $to, Project::MSG_INFO);
 
 		if($type == 'symlink')
