@@ -116,8 +116,9 @@ abstract class LinkHelper
 			mkdir(dirname($realTo), 0755, true);
 		}
 
-		// Get the real absolute path to the source
-		$realFrom = realpath($realFrom);
+		// Get the real absolute paths
+		$realFrom = self::getRealPath($realFrom);
+		$realTo   = self::getRealPath($realTo);
 
 		// If the target already exists we need to remove it first
 		if (is_file($realTo) || is_dir($realTo) || is_link($realTo) || file_exists($realTo))
@@ -281,6 +282,49 @@ abstract class LinkHelper
 	}
 
 	/**
+	 * Get the real path
+	 *
+	 * Resolves references to '/./', '/../' and extra '/' characters in the input path and
+	 * returns the canonicalized absolute pathname. Trailing delimiters, such as \ and /,
+	 * are also removed. Unlike PHP's realpath(), this function does not return false if
+	 * the file does not exist. This is why we need this function.
+	 *
+	 * @param 	string 	$pathToConvert	The path to convert to a real path
+	 *
+	 * @return 	string 	The real path
+	 */
+	public function getRealPath(string $pathToConvert): string
+	{
+		// Compatibility fix for Windows paths
+		$pathToConvert = str_replace(array('\\', '/'), DIRECTORY_SEPARATOR, $pathToConvert);
+
+		// Explode $pathToConvert
+		// array_filter(..., 'strlen') prevent empty array $parts values (e.g. when $pathToConvert contains '//')
+		$parts = array_filter(explode(DIRECTORY_SEPARATOR, $pathToConvert), 'strlen');
+
+		$realPathParts = [];
+
+		foreach ($parts as $part)
+		{
+			if ($part == '.')
+			{
+				continue;
+			}
+
+			if ($part == '..')
+			{
+				array_pop($realPathParts);
+			}
+			else
+			{
+				$realPathParts[] = $part;
+			}
+		}
+
+		return DIRECTORY_SEPARATOR . implode(DIRECTORY_SEPARATOR, $realPathParts);
+	}
+
+	/**
 	 * Get the relative path between two folders
 	 *
 	 * @param   string  $pathToConvert  Convert this folder to a location relative to $from
@@ -372,5 +416,4 @@ abstract class LinkHelper
 
 		return $res;
 	}
-
 }
