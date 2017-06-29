@@ -133,8 +133,8 @@ Akeeba Build Files
 		<copy todir="${dirs.root}" overwrite="true">
 			<fileset dir="${dirs.build.templates}">
 				<include name="**" />
-				<exclude name="**_core.xml" />
-				<exclude name="**_pro.xml" />
+				<exclude name="**/*_core.xml" />
+				<exclude name="**/*_pro.xml" />
 				<exclude name="link.php" />
 				<exclude name="release.json" />
 			</fileset>
