@@ -603,17 +603,6 @@ Akeeba Build Files
 			</else>
 		</if>
 
-		<!-- Copy the XML manifest file -->
-		<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/${build.component}.xml" overwrite="true">
-			<filterchain>
-				<replacetokens begintoken="##" endtoken="##">
-					<token key="DATE" value="${build.date}" />
-					<token key="VERSION" value="${version}" />
-					<token key="PRO" value="${build.is_pro}" />
-				</replacetokens>
-			</filterchain>
-		</copy>
-
 		<!-- Copy the version.php file -->
 		<if>
 			<available file="${phing.dir}/templates/version.php" property="completely.ignored" />
