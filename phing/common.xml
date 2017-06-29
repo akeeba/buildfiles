@@ -603,22 +603,6 @@ Akeeba Build Files
 			</else>
 		</if>
 
-		<!-- Copy the version.php file -->
-		<if>
-			<available file="${phing.dir}/templates/version.php" property="completely.ignored" />
-			<then>
-				<copy file="${phing.dir}/templates/version.php" tofile="${dirs.component}/backend/version.php" overwrite="true">
-					<filterchain>
-						<replacetokens begintoken="##" endtoken="##">
-							<token key="DATE" value="${build.date}" />
-							<token key="VERSION" value="${version}" />
-							<token key="PRO" value="${build.is_pro}" />
-						</replacetokens>
-					</filterchain>
-				</copy>
-			</then>
-		</if>
-
 		<!-- Create the package ZIP file -->
 		<zipme basedir="${dirs.component}" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
 			<fileset refid="${build.refid}" />
@@ -703,19 +687,9 @@ Akeeba Build Files
 			</else>
 		</if>
 
-		<!-- TODO If ${phing.dir}/templates/${build.template_xml} not exists do nothing -->
 		<if>
-			<available file="${phing.dir}/templates/${build.template_xml}" />
+			<available file="${dirs.build}/templates/component/cli/file_${build.component}.xml" property="completely.ignored" />
 			<then>
-				<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/cli/file_${build.component}.xml" overwrite="true">
-					<filterchain>
-						<replacetokens begintoken="##" endtoken="##">
-							<token key="DATE" value="${build.date}" />
-							<token key="VERSION" value="${version}" />
-						</replacetokens>
-					</filterchain>
-				</copy>
-
 				<zipme basedir="${dirs.component}/cli" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
 					<fileset refid="${build.refid}" />
 				</zipme>
@@ -724,7 +698,6 @@ Akeeba Build Files
 				<delete file="${dirs.release}/${build.package_name}" failonerror="false" />
 			</else>
 		</if>
-
 	</target>
 
 	<!--
@@ -1047,6 +1020,9 @@ Akeeba Build Files
 
 	<!--
 	Internal task to build one installation package (Core or Pro) at a time.
+
+	IMPORTANT: THE XML MANIFEST SHOULD ALWAYS BE pkg_something.xml WITHOUT A SUFFIX TO ALLOW
+	JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!!
 	-->
 	<target name="package-pkg-builder" description="Create an installation package">
 
@@ -1083,17 +1059,6 @@ Akeeba Build Files
 				<property name="build.refid" value="package-${build.suffix}" />
 			</else>
 		</if>
-
-		<!-- Create the XML manifest. IMPORTANT: THE TARGET NAME IS ALWAYS pkg_something.xml WITHOUT A SUFFIX TO ALLOW
-		 JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!! -->
-		<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.release}/pkg_${build.component}.xml" overwrite="true">
-			<filterchain>
-				<replacetokens begintoken="##" endtoken="##">
-					<token key="DATE" value="${build.date}" />
-					<token key="VERSION" value="${version}" />
-				</replacetokens>
-			</filterchain>
-		</copy>
 
 		<!-- Copy the LICENSE.txt file, if present -->
 		<if>
