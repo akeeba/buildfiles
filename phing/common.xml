@@ -15,7 +15,9 @@ Akeeba Build Files
 
     <!-- Built in properties -->
     <!-- ### Project Paths -->
-    <property name="dirs.root" value="${phing.dir}/.." />
+		<property name="dirs.build" value="${phing.dir}" />
+		<property name="dirs.build.templates" value="${dirs.build}/templates" />
+		<property name="dirs.root" value="${phing.dir}/.." />
     <property name="dirs.release" value="${dirs.root}/release" />
     <!-- ### Software and Documentation Paths -->
     <property name="dirs.component" value="${dirs.root}/component" />
@@ -70,27 +72,54 @@ Akeeba Build Files
 	number to make a numbered version release, e.g. `phing git -Dversion=1.2.3` to build version 1.2.3
 	-->
 	<target name="git" description="Makes only packages, not the documentation"
-			depends="new-release,setup-properties,component-packages">
+			depends="new-release,setup,component-packages">
 	</target>
 
-    <!--
-    Set up the basic version and build properties required to build files
-    -->
-    <target name="setup-properties" description="Set up version and build properties">
-        <!-- Initialize the build.date timestamp -->
-        <tstamp>
-            <format property="build.date" pattern="%Y-%m-%d" />
-        </tstamp>
+	<!--
+	Set up the basic version, build properties and templates required to build files
+	-->
+	<target name="setup" description="Set up version, build properties and build templates"
+					depends="setup-properties,setup-templates">
+	</target>
 
-        <!-- Initialize the version if it's not set -->
-        <if>
-            <equals arg1="${version}" arg2="git" />
-            <then>
-                <gitversion workingcopy="${dirs.root}" propertyname="git.lastrevision" />
-                <property name="version" value="rev${git.lastrevision}" override="true" />
-            </then>
-        </if>
-    </target>
+	<!--
+	Set up the basic version and build properties required to build files
+	-->
+	<target name="setup-properties" description="Set up version and build properties">
+			<!-- Initialize the build.date timestamp -->
+			<tstamp>
+					<format property="build.date" pattern="%Y-%m-%d" />
+			</tstamp>
+
+			<!-- Initialize the version if it's not set -->
+			<if>
+					<equals arg1="${version}" arg2="git" />
+					<then>
+							<gitversion workingcopy="${dirs.root}" propertyname="git.lastrevision" />
+							<property name="version" value="rev${git.lastrevision}" override="true" />
+					</then>
+			</if>
+	</target>
+
+	<!--
+	Set up build templates by copying /build/templates and replacing tokens
+	-->
+	<target name="setup-templates" description="Setup build templates" depends="setup-properties">
+		<copy todir="${dirs.root}" overwrite="true">
+			<fileset dir="${dirs.build.templates}">
+				<include name="**" />
+				<exclude name="link.php" />
+				<exclude name="release.json" />
+			</fileset>
+			<filterchain>
+				<replacetokens begintoken="##" endtoken="##">
+					<token key="DATE" value="${build.date}" />
+					<token key="VERSION" value="${version}" />
+					<token key="PRO" value="${build.is_pro}" />
+				</replacetokens>
+			</filterchain>
+		</copy>
+	</target>
 
     <!--
     Creates the release directory afresh before building anything
@@ -574,33 +603,6 @@ Akeeba Build Files
 			</else>
 		</if>
 
-		<!-- Copy the XML manifest file -->
-		<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/${build.component}.xml" overwrite="true">
-			<filterchain>
-				<replacetokens begintoken="##" endtoken="##">
-					<token key="DATE" value="${build.date}" />
-					<token key="VERSION" value="${version}" />
-					<token key="PRO" value="${build.is_pro}" />
-				</replacetokens>
-			</filterchain>
-		</copy>
-
-		<!-- Copy the version.php file -->
-		<if>
-			<available file="${phing.dir}/templates/version.php" property="completely.ignored" />
-			<then>
-				<copy file="${phing.dir}/templates/version.php" tofile="${dirs.component}/backend/version.php" overwrite="true">
-					<filterchain>
-						<replacetokens begintoken="##" endtoken="##">
-							<token key="DATE" value="${build.date}" />
-							<token key="VERSION" value="${version}" />
-							<token key="PRO" value="${build.is_pro}" />
-						</replacetokens>
-					</filterchain>
-				</copy>
-			</then>
-		</if>
-
 		<!-- Create the package ZIP file -->
 		<zipme basedir="${dirs.component}" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
 			<fileset refid="${build.refid}" />
@@ -685,19 +687,9 @@ Akeeba Build Files
 			</else>
 		</if>
 
-		<!-- TODO If ${phing.dir}/templates/${build.template_xml} not exists do nothing -->
 		<if>
-			<available file="${phing.dir}/templates/${build.template_xml}" />
+			<available file="${dirs.build}/templates/component/cli/file_${build.component}.xml" property="completely.ignored" />
 			<then>
-				<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/cli/file_${build.component}.xml" overwrite="true">
-					<filterchain>
-						<replacetokens begintoken="##" endtoken="##">
-							<token key="DATE" value="${build.date}" />
-							<token key="VERSION" value="${version}" />
-						</replacetokens>
-					</filterchain>
-				</copy>
-
 				<zipme basedir="${dirs.component}/cli" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
 					<fileset refid="${build.refid}" />
 				</zipme>
@@ -706,7 +698,6 @@ Akeeba Build Files
 				<delete file="${dirs.release}/${build.package_name}" failonerror="false" />
 			</else>
 		</if>
-
 	</target>
 
 	<!--
@@ -996,7 +987,7 @@ Akeeba Build Files
 	<!--
 	Builds all Core and Pro packages (pkg_something*.zip)
 	-->
-	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup-properties, package-com, package-files, package-modules, package-plugins, package-fof, package-strapper">
+	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup, package-com, package-files, package-modules, package-plugins, package-fof, package-strapper">
 
 		<!-- Build the Core package -->
 		<phingcall target="package-pkg-builder">
@@ -1029,6 +1020,9 @@ Akeeba Build Files
 
 	<!--
 	Internal task to build one installation package (Core or Pro) at a time.
+
+	IMPORTANT: THE XML MANIFEST SHOULD ALWAYS BE pkg_something.xml WITHOUT A SUFFIX TO ALLOW
+	JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!!
 	-->
 	<target name="package-pkg-builder" description="Create an installation package">
 
@@ -1065,17 +1059,6 @@ Akeeba Build Files
 				<property name="build.refid" value="package-${build.suffix}" />
 			</else>
 		</if>
-
-		<!-- Create the XML manifest. IMPORTANT: THE TARGET NAME IS ALWAYS pkg_something.xml WITHOUT A SUFFIX TO ALLOW
-		 JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!! -->
-		<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.release}/pkg_${build.component}.xml" overwrite="true">
-			<filterchain>
-				<replacetokens begintoken="##" endtoken="##">
-					<token key="DATE" value="${build.date}" />
-					<token key="VERSION" value="${version}" />
-				</replacetokens>
-			</filterchain>
-		</copy>
 
 		<!-- Copy the LICENSE.txt file, if present -->
 		<if>
