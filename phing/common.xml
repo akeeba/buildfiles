@@ -15,7 +15,9 @@ Akeeba Build Files
 
     <!-- Built in properties -->
     <!-- ### Project Paths -->
-    <property name="dirs.root" value="${phing.dir}/.." />
+		<property name="dirs.build" value="${phing.dir}" />
+		<property name="dirs.build.templates" value="${dirs.build}/templates" />
+		<property name="dirs.root" value="${phing.dir}/.." />
     <property name="dirs.release" value="${dirs.root}/release" />
     <!-- ### Software and Documentation Paths -->
     <property name="dirs.component" value="${dirs.root}/component" />
@@ -58,6 +60,15 @@ Akeeba Build Files
     <taskdef name="relinksite" classname="tasks.RelinkSiteTask" />
     <taskdef name="zipme" classname="tasks.ZipmeTask" />
 
+	<!-- Filter chains -->
+	<filterchain id="filterchain-templates">
+		<replacetokens begintoken="##" endtoken="##">
+			<token key="DATE" value="${build.date}" />
+			<token key="VERSION" value="${version}" />
+			<token key="PRO" value="${build.is_pro}" />
+		</replacetokens>
+	</filterchain>
+
 	<!--
 	Generate the installation packages and the documentation
 	-->
@@ -70,27 +81,100 @@ Akeeba Build Files
 	number to make a numbered version release, e.g. `phing git -Dversion=1.2.3` to build version 1.2.3
 	-->
 	<target name="git" description="Makes only packages, not the documentation"
-			depends="new-release,setup-properties,component-packages">
+			depends="new-release,setup,component-packages">
 	</target>
 
-    <!--
-    Set up the basic version and build properties required to build files
-    -->
-    <target name="setup-properties" description="Set up version and build properties">
-        <!-- Initialize the build.date timestamp -->
-        <tstamp>
-            <format property="build.date" pattern="%Y-%m-%d" />
-        </tstamp>
+	<!--
+	Set up the basic version, build properties and templates required to build files
+	-->
+	<target name="setup" description="Set up version, build properties and build templates"
+					depends="setup-properties,setup-templates-general">
+	</target>
 
-        <!-- Initialize the version if it's not set -->
-        <if>
-            <equals arg1="${version}" arg2="git" />
-            <then>
-                <gitversion workingcopy="${dirs.root}" propertyname="git.lastrevision" />
-                <property name="version" value="rev${git.lastrevision}" override="true" />
-            </then>
-        </if>
-    </target>
+	<!--
+	Set up the basic version and build properties required to build files
+	-->
+	<target name="setup-properties" description="Set up version and build properties">
+			<!-- Initialize the build.date timestamp -->
+			<tstamp>
+					<format property="build.date" pattern="%Y-%m-%d" />
+			</tstamp>
+
+			<!-- Initialize the version if it's not set -->
+			<if>
+					<equals arg1="${version}" arg2="git" />
+					<then>
+							<gitversion workingcopy="${dirs.root}" propertyname="git.lastrevision" />
+							<property name="version" value="rev${git.lastrevision}" override="true" />
+					</then>
+			</if>
+	</target>
+
+	<!--
+	Set up build templates by copying /build/templates and replacing tokens
+
+	Build templates for Core and Pro versions are supported. In order to use this you only have to
+	add 'core' and 'pro' suffixes to the manifest files. The Core and Pro versions should have the
+	same filename, followed by the version suffix ('-core' or '-pro'). The file will be copied and
+	the suffix will be removed automatically. For example:
+
+	/build/templates/component/something-core.xml -> /component/something.xml
+	/build/templates/component/something-pro.xml  -> /component/something.xml
+
+	The setup-templates-corepro task should be called every time before the extension is zipped,
+	in order to make sure the correct xml file is used.
+	-->
+
+	<!--
+	Setup general build templates which apply always
+	-->
+	<target name="setup-templates-general" description="Setup general build templates"
+					depends="setup-properties">
+		<copy todir="${dirs.root}" overwrite="true">
+			<fileset dir="${dirs.build.templates}">
+				<include name="**" />
+				<exclude name="**/*_core.xml" />
+				<exclude name="**/*_pro.xml" />
+				<exclude name="link.php" />
+				<exclude name="release.json" />
+			</fileset>
+			<filterchain refid="filterchain-templates" />
+		</copy>
+	</target>
+
+	<!--
+	Set up build templates which only apply to Core and Pro versions
+	-->
+	<target name="setup-templates-corepro" description="Setup build templates for Core and Pro versions">
+		<if>
+			<equals arg1="${build.has_pro}" arg2="1" />
+			<then>
+				<if>
+					<equals arg1="${build.is_pro}" arg2="1" />
+					<then>
+						<!-- Copy templates which only apply to pro versions -->
+						<copy todir="${dirs.root}" overwrite="true">
+							<mapper type="regexp" from="(.*)_pro\.xml" to="\1.xml" />
+							<fileset dir="${dirs.build.templates}">
+								<include name="**/*_pro.xml" />
+							</fileset>
+							<filterchain refid="filterchain-templates" />
+						</copy>
+					</then>
+					<else>
+						<!-- Copy templates which only apply to core versions -->
+						<copy todir="${dirs.root}" overwrite="true">
+							<mapper type="regexp" from="(.*)_core\.xml" to="\1.xml" />
+							<fileset dir="${dirs.build.templates}">
+								<include name="**/*_core.xml" />
+							</fileset>
+							<filterchain refid="filterchain-templates" />
+						</copy>
+					</else>
+				</if>
+			</then>
+		</if>
+	</target>
 
     <!--
     Creates the release directory afresh before building anything
@@ -539,7 +623,7 @@ Akeeba Build Files
 	<!--
 	Internal builder task to build one component installation package (Core or Pro) at a time
 	-->
-	<target name="package-com-builder" description="Builds a component package archive">
+	<target name="package-com-builder" depends="setup-templates-corepro" description="Builds a component package archive">
 		<!-- Determine the name of the XML manifest template file, package file and the fileset reference ID -->
 		<if>
 			<not>
@@ -572,33 +656,6 @@ Akeeba Build Files
 				<!-- Fileset reference ID: component-core -->
 				<property name="build.refid" value="component-${build.suffix}" />
 			</else>
-		</if>
-
-		<!-- Copy the XML manifest file -->
-		<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/${build.component}.xml" overwrite="true">
-			<filterchain>
-				<replacetokens begintoken="##" endtoken="##">
-					<token key="DATE" value="${build.date}" />
-					<token key="VERSION" value="${version}" />
-					<token key="PRO" value="${build.is_pro}" />
-				</replacetokens>
-			</filterchain>
-		</copy>
-
-		<!-- Copy the version.php file -->
-		<if>
-			<available file="${phing.dir}/templates/version.php" property="completely.ignored" />
-			<then>
-				<copy file="${phing.dir}/templates/version.php" tofile="${dirs.component}/backend/version.php" overwrite="true">
-					<filterchain>
-						<replacetokens begintoken="##" endtoken="##">
-							<token key="DATE" value="${build.date}" />
-							<token key="VERSION" value="${version}" />
-							<token key="PRO" value="${build.is_pro}" />
-						</replacetokens>
-					</filterchain>
-				</copy>
-			</then>
 		</if>
 
 		<!-- Create the package ZIP file -->
@@ -650,7 +707,7 @@ Akeeba Build Files
 	<!--
 	Internal builder task to build one file installation package (Core or Pro) at a time
 	-->
-	<target name="package-files-builder" description="file package for CLI files">
+	<target name="package-files-builder" depends="setup-templates-corepro" description="file package for CLI files">
 		<!-- Determine the name of the XML manifest template file, package file and the fileset reference ID -->
 		<if>
 			<not>
@@ -685,19 +742,9 @@ Akeeba Build Files
 			</else>
 		</if>
 
-		<!-- TODO If ${phing.dir}/templates/${build.template_xml} not exists do nothing -->
 		<if>
-			<available file="${phing.dir}/templates/${build.template_xml}" />
+			<available file="${dirs.build}/templates/component/cli/file_${build.component}.xml" property="completely.ignored" />
 			<then>
-				<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/cli/file_${build.component}.xml" overwrite="true">
-					<filterchain>
-						<replacetokens begintoken="##" endtoken="##">
-							<token key="DATE" value="${build.date}" />
-							<token key="VERSION" value="${version}" />
-						</replacetokens>
-					</filterchain>
-				</copy>
-
 				<zipme basedir="${dirs.component}/cli" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
 					<fileset refid="${build.refid}" />
 				</zipme>
@@ -706,7 +753,6 @@ Akeeba Build Files
 				<delete file="${dirs.release}/${build.package_name}" failonerror="false" />
 			</else>
 		</if>
-
 	</target>
 
 	<!--
@@ -996,7 +1042,7 @@ Akeeba Build Files
 	<!--
 	Builds all Core and Pro packages (pkg_something*.zip)
 	-->
-	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup-properties, package-com, package-files, package-modules, package-plugins, package-fof, package-strapper">
+	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup, package-com, package-files, package-modules, package-plugins, package-fof, package-strapper">
 
 		<!-- Build the Core package -->
 		<phingcall target="package-pkg-builder">
@@ -1029,8 +1075,11 @@ Akeeba Build Files
 
 	<!--
 	Internal task to build one installation package (Core or Pro) at a time.
+
+	IMPORTANT: THE XML MANIFEST SHOULD ALWAYS BE pkg_something.xml WITHOUT A SUFFIX TO ALLOW
+	JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!!
 	-->
-	<target name="package-pkg-builder" description="Create an installation package">
+	<target name="package-pkg-builder" depends="setup-templates-corepro" description="Create an installation package">
 
 		<!-- Determine the name of the XML manifest template file, package file and the fileset reference ID -->
 		<if>
@@ -1065,17 +1114,6 @@ Akeeba Build Files
 				<property name="build.refid" value="package-${build.suffix}" />
 			</else>
 		</if>
-
-		<!-- Create the XML manifest. IMPORTANT: THE TARGET NAME IS ALWAYS pkg_something.xml WITHOUT A SUFFIX TO ALLOW
-		 JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!! -->
-		<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.release}/pkg_${build.component}.xml" overwrite="true">
-			<filterchain>
-				<replacetokens begintoken="##" endtoken="##">
-					<token key="DATE" value="${build.date}" />
-					<token key="VERSION" value="${version}" />
-				</replacetokens>
-			</filterchain>
-		</copy>
 
 		<!-- Copy the LICENSE.txt file, if present -->
 		<if>
