@@ -758,7 +758,7 @@ Akeeba Build Files
 	<!--
 	Builds all the modules found in the modules/site and modules/admin folders of your repository
 	-->
-	<target name="package-modules" description="Build all modules">
+	<target name="package-modules" description="Build all modules" depends="setup-templates-corepro" >
 		<foreach param="dirname" absparam="absname" target="package-module-folder">
 			<fileset dir="${dirs.modules}">
 				<type type="dir" />
@@ -799,7 +799,7 @@ Akeeba Build Files
 	<!--
 	Builds all the plugins found in the plugins/* folders of your repository
 	-->
-	<target name="package-plugins" description="Build all plugins">
+	<target name="package-plugins" description="Build all plugins" depends="setup-templates-corepro" >
 		<foreach param="dirname" absparam="absname" target="package-plugin-folder">
 			<fileset dir="${dirs.plugins}">
 				<type type="dir" />
@@ -1042,7 +1042,7 @@ Akeeba Build Files
 	<!--
 	Builds all Core and Pro packages (pkg_something*.zip)
 	-->
-	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup, package-com, package-files, package-modules, package-plugins, package-fof, package-strapper">
+	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup">
 
 		<!-- Build the Core package -->
 		<phingcall target="package-pkg-builder">
@@ -1079,7 +1079,8 @@ Akeeba Build Files
 	IMPORTANT: THE XML MANIFEST SHOULD ALWAYS BE pkg_something.xml WITHOUT A SUFFIX TO ALLOW
 	JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!!
 	-->
-	<target name="package-pkg-builder" depends="setup-templates-corepro" description="Create an installation package">
+	<target name="package-pkg-builder" description="Create an installation package" depends="package-com,
+					package-files, package-modules, package-plugins, package-fof, package-strapper" >
 
 		<!-- Determine the name of the XML manifest template file, package file and the fileset reference ID -->
 		<if>
