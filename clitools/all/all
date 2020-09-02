@@ -9,6 +9,7 @@ usage () {
 	echo -e $COLOR_BLUE"All repositories"$COLOR_NC
 	echo "pull	  Pull from Git"
 	echo "push	  Push to Git"
+	echo "tidy	  Perform local Git repo housekeeping"
 	echo "status  Report repositories with uncommitted changes"
 	echo "branch  Which branch am I in?"
 	echo -e $COLOR_BLUE"Using Akeeba Build Files"$COLOR_NC
@@ -78,6 +79,12 @@ do
 			echo -e "\n"$COLOR_LIGHT_GREEN"Pushing $COLOR_CYAN$d"$COLOR_NC
 			git push
 			git push --tags
+			;;
+
+		tidy )
+			echo -e "\n"$COLOR_RED"Housekeeping $COLOR_CYAN$d"$COLOR_NC
+			git remote prune origin
+			git gc
 			;;
 
     branch )

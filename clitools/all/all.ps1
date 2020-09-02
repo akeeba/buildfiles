@@ -14,6 +14,7 @@ function showUsage()
 	Write-Host All repositories -Foreground Blue
 	Write-Host "pull     Pull from Git"
 	Write-Host "push     Push to Git"
+	Write-Host "tidy     Perform local Git repo housekeeping"
 	Write-Host "status   Report repositories with uncommitted changes"
 	Write-Host "branch   Which Git branch am I in?"
 	Write-Host "fixcrlf  Fix CRLF under Windows"
@@ -68,6 +69,13 @@ Get-ChildItem -Directory | ForEach-Object {
 			git push --all
 		}
 		
+		"tidy" {
+			Write-Host "Housekeeping " -Foreground Red -NoNewline
+			Write-Host $d -Foreground Cyan
+			git remote prune origin
+			git gc
+		}
+
 		"status" {
 			if ( (git status --porcelain | Measure-Object -Line).Lines -gt 0)
 			{
