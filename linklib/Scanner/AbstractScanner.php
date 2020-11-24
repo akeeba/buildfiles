@@ -531,6 +531,27 @@ abstract class AbstractScanner implements ScannerInterface
 			}
 		}
 
+		// API language files
+		if (!empty($scan->apiLangFiles))
+		{
+			$basePath = $this->siteRoot . '/api/language/';
+
+			foreach ($scan->apiLangFiles as $tag => $languageFiles)
+			{
+				$path = $basePath . $tag . '/';
+
+				if (!is_dir($path))
+				{
+					continue;
+				}
+
+				foreach ($languageFiles as $langFile)
+				{
+					$files[$langFile] = $path . basename($langFile);
+				}
+			}
+		}
+
 		$result            = new MapResult();
 		$result->dirs      = $dirs;
 		$result->files     = $files;

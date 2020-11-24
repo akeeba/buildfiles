@@ -10,6 +10,7 @@ namespace Akeeba\LinkLibrary\Scanner;
 use Akeeba\LinkLibrary\MapResult;
 use Akeeba\LinkLibrary\ScannerInterface;
 use Akeeba\LinkLibrary\ScanResult;
+use DOMDocument;
 use RuntimeException;
 
 /**
@@ -68,34 +69,7 @@ class Component extends AbstractScanner
 		}
 
 		// Get the <files> tags for front and back-end
-		$result->siteFolder = $this->extensionRoot;
-		$allFilesTags       = $xmlDoc->getElementsByTagName('files');
-
-		if ($allFilesTags->length != 2)
-		{
-			throw new RuntimeException("Not enough <files> tags found in XML manifest for {$result->extension}");
-		}
-
-		$nodePath0     = $allFilesTags->item(0)->getNodePath();
-		$siteFilesTag  = $allFilesTags->item(0);
-		$adminFilesTag = $allFilesTags->item(1);
-
-		if ($nodePath0 != '/extension/files')
-		{
-			$siteFilesTag  = $allFilesTags->item(1);
-			$adminFilesTag = $allFilesTags->item(0);
-		}
-
-		// Get the site and admin folders
-		if ($siteFilesTag->hasAttribute('folder'))
-		{
-			$result->siteFolder = $this->extensionRoot . '/' . $siteFilesTag->getAttribute('folder');
-		}
-
-		if ($adminFilesTag->hasAttribute('folder'))
-		{
-			$result->adminFolder = $this->extensionRoot . '/' . $adminFilesTag->getAttribute('folder');
-		}
+		$this->getFilesFoldersFromManifest($result, $xmlDoc);
 
 		// Get the media folder
 		$result->mediaFolder      = null;
@@ -105,7 +79,7 @@ class Component extends AbstractScanner
 		if ($allMediaTags->length >= 1)
 		{
 			$result->mediaFolder      = $this->extensionRoot . '/' . (string) $allMediaTags->item(0)
-			                                                                               ->getAttribute('folder');
+					->getAttribute('folder');
 			$result->mediaDestination = $allMediaTags->item(0)->getAttribute('destination');
 		}
 
@@ -127,7 +101,7 @@ class Component extends AbstractScanner
 
 		foreach ($frontEndLanguageNodes as $node)
 		{
-			list($languageRoot, $languageFiles) = $this->scanLanguageNode($node);
+			[$languageRoot, $languageFiles] = $this->scanLanguageNode($node);
 
 			if (!empty($languageFiles))
 			{
@@ -143,12 +117,29 @@ class Component extends AbstractScanner
 
 		foreach ($backEndLanguageNodes as $node)
 		{
-			list($languageRoot, $languageFiles) = $this->scanLanguageNode($node);
+			[$languageRoot, $languageFiles] = $this->scanLanguageNode($node);
 
 			if (!empty($languageFiles))
 			{
 				$result->adminLangFiles = $languageFiles;
 				$result->adminLangPath  = $languageRoot;
+			}
+		}
+
+		// Get API language files from the API <languages> tag
+		$result->apiLangPath  = null;
+		$result->apiLangFiles = [];
+		$apiLanguageNodes     = $xpath->query('/extension/api/languages');
+		$apiLanguageNodes     = ($apiLanguageNodes === false) ? [] : $apiLanguageNodes;
+
+		foreach ($apiLanguageNodes as $node)
+		{
+			[$languageRoot, $languageFiles] = $this->scanLanguageNode($node);
+
+			if (!empty($languageFiles))
+			{
+				$result->apiLangFiles = $languageFiles;
+				$result->apiLangPath  = $languageRoot;
 			}
 		}
 
@@ -172,6 +163,15 @@ class Component extends AbstractScanner
 				$result->adminLangPath  = $langPath;
 				$result->adminLangFiles = $langFiles;
 			}
+
+			$langPath  = $this->languageRoot . '/component/api';
+			$langFiles = $this->scanLanguageFolder($langPath);
+
+			if (!empty($langFiles))
+			{
+				$result->apiLangPath  = $langPath;
+				$result->apiLangFiles = $langFiles;
+			}
 		}
 
 		return $result;
@@ -184,7 +184,7 @@ class Component extends AbstractScanner
 	 */
 	public function map()
 	{
-		$scan = $this->getScanResults();
+		$scan   = $this->getScanResults();
 		$result = parent::map();
 
 		// Frontend and backend directories
@@ -192,6 +192,10 @@ class Component extends AbstractScanner
 			$scan->siteFolder  => $this->siteRoot . '/components/' . $scan->extension,
 			$scan->adminFolder => $this->siteRoot . '/administrator/components/' . $scan->extension,
 		];
+
+		if (!empty($scan->apiFolder)) {
+			$dirs[$scan->apiFolder] = $this->siteRoot . '/api/components/' . $scan->extension;
+		}
 
 		$result->dirs = array_merge($result->dirs, $dirs);
 
@@ -230,9 +234,71 @@ class Component extends AbstractScanner
 		}
 
 		// Get the extension ScannerInterface object
-		$extension          = new Component($path, $translationsRoot);
+		$extension = new Component($path, $translationsRoot);
 
 		return [$extension];
+	}
+
+	/**
+	 * Extracts the location of the site, administration and api folders from the XML manifest
+	 *
+	 * @param   ScanResult   $result  The scan result to add to.
+	 * @param   DOMDocument  $xmlDoc  The parsed XML manifest.
+	 */
+	private function getFilesFoldersFromManifest(ScanResult $result, DOMDocument $xmlDoc): void
+	{
+		$result->siteFolder = $this->extensionRoot;
+		$allFilesTags       = $xmlDoc->getElementsByTagName('files');
+
+		if ($allFilesTags->length < 2)
+		{
+			throw new RuntimeException("Not enough <files> tags found in XML manifest for {$result->extension}");
+		}
+
+		$siteFilesTag  = null;
+		$adminFilesTag = null;
+		$apiFilesTag   = null;
+
+		for ($i = 0; $i < $allFilesTags->length; $i++)
+		{
+			$nodePath = $allFilesTags->item($i)->getNodePath();
+
+			switch ($nodePath)
+			{
+				case '/extension/files':
+					$siteFilesTag = $allFilesTags->item($i);
+					break;
+
+				case '/extension/administration/files':
+					$adminFilesTag = $allFilesTags->item($i);
+					break;
+
+				case '/extension/api/files':
+					$apiFilesTag = $allFilesTags->item($i);
+					break;
+			}
+		}
+
+		if (empty($siteFilesTag) || empty($adminFilesTag))
+		{
+			throw new RuntimeException("The {$result->extension} extension needs <files> tags for both site and administrator parts of the component.");
+		}
+
+		// Get the site and admin folders
+		if ($siteFilesTag->hasAttribute('folder'))
+		{
+			$result->siteFolder = $this->extensionRoot . '/' . $siteFilesTag->getAttribute('folder');
+		}
+
+		if ($adminFilesTag->hasAttribute('folder'))
+		{
+			$result->adminFolder = $this->extensionRoot . '/' . $adminFilesTag->getAttribute('folder');
+		}
+
+		if (!empty($apiFilesTag) && $apiFilesTag->hasAttribute('folder'))
+		{
+			$result->apiFolder = $this->extensionRoot . '/' . $apiFilesTag->getAttribute('folder');
+		}
 	}
 
 }

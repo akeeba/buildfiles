@@ -55,6 +55,13 @@ final class ScanResult
 	public $adminFolder = '';
 
 	/**
+	 * Absolute path to the folder containing the Joomla 4 API application files for the extension
+	 *
+	 * @var  string
+	 */
+	public $apiFolder = '';
+
+	/**
 	 * Absolute path to the folder containing the library files for the extensions (they go into /libraries)
 	 *
 	 * @var  string
@@ -137,6 +144,33 @@ final class ScanResult
 	 * @var  array
 	 */
 	public $adminLangFiles = [];
+
+	/**
+	 * Absolute path to the folder containing the API language files for the extension. Note: this is the folder
+	 * containing the actual language directories such as en-GB, de-DE, fr-FR and so on.
+	 *
+	 * @var  string
+	 */
+	public $apiLangPath = '';
+
+	/**
+	 * List of the absolute paths of all of the API language files, listed by language.
+	 *
+	 * For example:
+	 * [
+	 *   'en-GB' => [
+	 *     '/path/to/en-GB/en-GB.com_foobar.ini',
+	 *     '/path/to/en-GB/en-GB.com_foobar.sys.ini',
+	 *   ],
+	 *   'fr-FR' => [
+	 *     '/path/to/fr-FR/fr-FR.com_foobar.ini',
+	 *     '/path/to/fr-FR/fr-FR.com_foobar.sys.ini',
+	 *   ]
+	 * ]
+	 *
+	 * @var  array
+	 */
+	public $apiLangFiles = [];
 
 	/**
 	 * Return the name of the extension as it'd be reported by Joomla
