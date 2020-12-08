@@ -67,6 +67,20 @@ class Plugin extends AbstractScanner
 			}
 		}
 
+		/**
+		 * Native Joomla 4 plugins do not have the plugin attribute in a file entry. They have a namespace element under
+		 * the root and the plugin name is the name of the folder.
+		 */
+		if (is_null($plugin))
+		{
+			$hasNamespace = $xmlDoc->getElementsByTagName('namespace')->count();
+
+			if ($hasNamespace)
+			{
+				$plugin = basename($this->extensionRoot);
+			}
+		}
+
 		if (is_null($plugin))
 		{
 			throw new RuntimeException("Cannot find the plugin name in the XML manifest for {$this->extensionRoot}");
