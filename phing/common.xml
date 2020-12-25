@@ -492,10 +492,11 @@
 
 	github.organization		The GitHub organization where your repository is located in
 	github.repository		The name of your repository
+	github.release.file		The file to release into GitHub
 
 	Tip: Your GitHub repository's URL is https://github.com/${github.organization}/${github.repository}
 	-->
-	<target name="guthub-release">
+	<target name="github-release">
 		<!-- Make sure there is a tag that's the same as the version number -->
 		<gittag gitPath="${git.binary}"
 				repository="${dirs.root}"
@@ -532,13 +533,23 @@
 					   propName="github.release.id" />
 
 		<!-- Upload the release files -->
-		<GitHubAsset token="${github.token}" organization="${github.organization}" repository="${github.repository}"
-					 file="${dirs.release}/plg_system_mailmagic.zip"
-					 releaseId="${github.release.id}" />
+		<fileset dir="${dirs.release}" id="github_release_files">
+			<include name="${github.release.file}" />
+		</fileset>
+
+		<foreach param="filename" target="github-release-file">
+			<fileset refid="github_release_files" />
+		</foreach>
 
 		<!-- Publish the release -->
 		<GitHubRelease token="${github.token}" organization="${github.organization}" repository="${github.repository}"
 					   tagName="${version}" draft="0" />
+	</target>
+
+	<target name="github-release-file">
+		<GitHubAsset token="${github.token}" organization="${github.organization}" repository="${github.repository}"
+					 file="${dirs.release}/${filename}"
+					 releaseId="${github.release.id}" />
 	</target>
 
 	<!--
