@@ -1,12 +1,8 @@
 <?php
 /**
- * langConvert - a Joomla! 1.5 to Joomla! 1.6 language converter
- * Copyright ©2011 Nicholas K. Dionysopoulos / Akeeba Ltd
- * 
- * Usage: convert.php filename.ini
- *
- * @author Nicholas K. Dionysopoulos <nicholas@akeeba.com>
- * @license GNU/GPL v3 or later <http://www.gnu.org/licenses/gpl.html>
+ * @package   buildfiles
+ * @copyright Copyright (c)2010-2021 Nicholas K. Dionysopoulos / Akeeba Ltd
+ * @license   GNU General Public License version 3, or later
  */
  
 echo <<<ENDBANNER

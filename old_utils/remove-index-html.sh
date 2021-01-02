@@ -1,7 +1,9 @@
 #!/bin/bash
-## @package   buildfiles
-## @copyright Copyright (c)2010-2020 Nicholas K. Dionysopoulos / Akeeba Ltd
-## @license   GNU General Public License version 3, or later
+#
+# @package   buildfiles
+# @copyright Copyright (c)2010-2021 Nicholas K. Dionysopoulos / Akeeba Ltd
+# @license   GNU General Public License version 3, or later
+#
 
 # The opposite of add-index-html.sh. It removes all those ugly index.html files from the repository folders.
 #
