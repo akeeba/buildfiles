@@ -336,8 +336,10 @@
         </curlsftp>
     </target>
 
-    <!--
+	<!--
     Uses Akeeba Release maker to deploy new releases to a remote Akeeba Release System installation.
+
+    release.method				json, yaml or github
 
     release.source              Absolute path and filename to the release.json prototype we're going to use
     release.api.endpoint        URL to the ARS API endpoint
@@ -373,7 +375,25 @@
     scp.password                SFTP password
     scp.dir                     SFTP initial directory
     -->
-    <target name="release" depends="setup-properties" description="Use Akeeba Release Maker to deploy software">
+	<target name="release">
+		<if>
+			<equals arg1="${release.method}" arg2="yaml" />
+			<then>
+				<phingcall target="release-yaml" />
+			</then>
+			<elseif>
+				<equals arg1="${release.method}" arg2="github" />
+				<then>
+					<phingcall target="github-release" />
+				</then>
+			</elseif>
+			<else>
+				<phingcall target="release-legacy" />
+			</else>
+		</if>
+	</target>
+
+    <target name="release-legacy" depends="setup-properties" description="Use Akeeba Release Maker to deploy software">
         <phingcall target="onBeforeRelease">
         </phingcall>
 
@@ -483,6 +503,102 @@
         </phingcall>
     </target>
 
+	<target name="release-yaml" depends="setup-properties" description="Use Akeeba Release Maker 2 to deploy software">
+		<phingcall target="onBeforeRelease">
+		</phingcall>
+
+		<!-- If release.yaml is not specified use either ${phing.dir}/templates/release.yaml or
+         if it doesn't exist our default release.yaml file -->
+		<if>
+			<not>
+				<isset property="release.source" />
+			</not>
+			<then>
+				<property name="release.source" value="${phing.dir}/templates/release.yaml" />
+			</then>
+		</if>
+
+		<copy file="${release.source}" tofile="${dirs.root}/release.yaml" overwrite="true">
+			<filterchain id="standard-tokens">
+				<replacetokens begintoken="%%" endtoken="%%">
+					<token key="DATE" value="${build.date}" />
+					<token key="VERSION" value="${version}" />
+
+					<token key="RELEASEDIR" value="${dirs.release}" />
+					<token key="RELEASEACCESS" value="${release.access}" />
+					<token key="REPODIR" value="${dirs.root}" />
+					<token key="DEFAULT_RELEASE_NOTES" value="${dirs.root}/RELEASENOTES.html" />
+					<token key="DEFAULT_CHANGELOG" value="${dirs.root}/CHANGELOG" />
+					<token key="RELEASECATEGORY" value="${release.category}" />
+					<token key="UPDATEMETHOD" value="${release.updatemethod}" />
+					<token key="CUSTOMCACERT" value="${release.cacert}" />
+					<token key="RELEASESTEPS" value="${release.steps}" />
+
+					<token key="API.ENDPOINT" value="${release.api.endpoint}" />
+					<token key="API.USERNAME" value="${release.api.username}" />
+					<token key="API.PASSWORD" value="${release.api.password}" />
+					<token key="API.TOKEN" value="${release.api.token}" />
+					<token key="API.CONNECTOR" value="${release.api.connector}" />
+
+					<token key="S3.ACCESS" value="${s3.access}" />
+					<token key="S3.SECRET" value="${s3.private}" />
+					<token key="S3.BUCKET" value="${s3.bucket}" />
+					<token key="S3.DIRECTORY" value="${s3.directory}" />
+					<token key="S3.CDNHOSTNAME" value="${s3.cdnhostname}" />
+					<token key="S3.SIGNATURE" value="${s3.signature}" />
+					<token key="S3.REGION" value="${s3.region}" />
+					<token key="S3.TLS" value="${s3.tls}" />
+					<token key="S3.ACL" value="${s3.acl}" />
+					<token key="S3.STORAGE_CLASS" value="${s3.storage_class}" />
+					<token key="S3.MAXIMUM_AGE" value="${s3.maximum_age}" />
+
+					<token key="UPDATES_DIR" value="${release.update_dir}" />
+
+					<token key="SFTP.HOST" value="${scp.host}" />
+					<token key="SFTP.DIR" value="${scp.dir}" />
+					<token key="SFTP.PORT" value="${scp.port}" />
+					<token key="SFTP.USERNAME" value="${scp.username}" />
+					<token key="SFTP.PASSWORD" value="${scp.password}" />
+
+					<token key="SFTP.PUBKEYFILE" value="${scp.pubkeyfile}" />
+					<token key="SFTP.PRIVKEYFILE" value="${scp.privkeyfile}" />
+					<token key="SFTP.PRIVKEYFILE.PASS" value="${scp.privkeyfilepassphrase}" />
+
+					<token key="CORE.METHOD" value="${release.core.method}" />
+					<token key="CORE.DIR" value="${release.core.dir}" />
+					<token key="CORE.PATTERN" value="${release.core.pattern}" />
+					<token key="CORE.UPDATEBASE" value="${release.core.update_basename}" />
+					<token key="CORE.UPDATESTREAM" value="${release.core.update_stream}" />
+					<token key="CORE.ACCESS" value="${release.core.access_level}" />
+					<token key="CORE.UPDATEFORMATS" value="${release.core.update.formats}" />
+
+					<token key="PRO.METHOD" value="${release.pro.method}" />
+					<token key="PRO.DIR" value="${release.pro.dir}" />
+					<token key="PRO.PATTERN" value="${release.pro.pattern}" />
+					<token key="PRO.UPDATEBASE" value="${release.pro.update_basename}" />
+					<token key="PRO.UPDATESTREAM" value="${release.pro.update_stream}" />
+					<token key="PRO.ACCESS" value="${release.pro.access_level}" />
+					<token key="PRO.UPDATEFORMATS" value="${release.pro.update.formats}" />
+
+					<token key="DOCS.WHERE" value="${release.docs.where}" />
+					<token key="DOCS.WHICH" value="${release.docs.which}" />
+
+				</replacetokens>
+			</filterchain>
+		</copy>
+
+		<exec executable="${system.php_cli}" dir="${dirs.root}" passthru="true" checkreturn="true">
+			<arg file="${dirs.root}/../releasemaker/releasemaker.php" />
+			<arg value="--debug" />
+			<arg file="${dirs.root}/release.yaml" />
+		</exec>
+
+		<delete file="${dirs.root}/release.yaml" quiet="true" />
+
+		<phingcall target="onAfterRelease">
+		</phingcall>
+	</target>
+
 	<!--
 	Deploy a new release to GitHub's releases.
 
@@ -558,112 +674,8 @@
 	This is a modified release task, making sure there is no valid version or core/pro/pdf file upload pattern.
 	-->
 	<target name="update" depends="setup-properties" description="Use Akeeba Release Maker to deploy software">
-		<phingcall target="onBeforeRelease">
-		</phingcall>
-
-		<!-- If release.json is not specified use either ${phing.dir}/templates/release.json or
-         if it doesn't exist our default release.json file -->
-		<if>
-			<not>
-				<isset property="release.source" />
-			</not>
-			<then>
-				<if>
-					<available property="totally.ignored" file="${phing.dir}/templates/release.json" />
-					<then>
-						<property name="release.source" value="${phing.dir}/templates/release.json" />
-					</then>
-					<else>
-						<property name="release.source" value="${phing.dir.common}/release.json" />
-					</else>
-				</if>
-
-
-			</then>
-		</if>
-
-		<propertyregex property="dirs.release.translated"
-					   override="true"
-					   subject="${dirs.release}"
-					   pattern="\\"
-					   replace="/"
-					   casesensitive="true" />
-		<propertyregex property="dirs.root.translated"
-					   override="true"
-					   subject="${dirs.root}"
-					   pattern="\\"
-					   replace="/"
-					   casesensitive="true" />
-
-		<copy file="${release.source}" tofile="${dirs.root}/release.json" overwrite="true">
-			<filterchain id="standard-tokens">
-				<replacetokens begintoken="##" endtoken="##">
-					<token key="DATE" value="${build.date}" />
-					<token key="VERSION" value="${version}" />
-
-					<token key="RELEASEDIR" value="${dirs.release.translated}" />
-					<token key="REPODIR" value="${dirs.root.translated}" />
-					<token key="RELEASECATEGORY" value="${release.category}" />
-					<token key="UPDATEMETHOD" value="${release.updatemethod}" />
-					<token key="CUSTOMCACERT" value="${release.cacert}" />
-					<token key="RELEASESTEPS" value="${release.steps_update}" />
-
-					<token key="API.ENDPOINT" value="${release.api.endpoint}" />
-					<token key="API.USERNAME" value="${release.api.username}" />
-					<token key="API.PASSWORD" value="${release.api.password}" />
-					<token key="API.TOKEN" value="${release.api.token}" />
-
-					<token key="S3.ACCESS" value="${s3.access}" />
-					<token key="S3.SECRET" value="${s3.private}" />
-					<token key="S3.BUCKET" value="${s3.bucket}" />
-					<token key="S3.DIRECTORY" value="${s3.directory}" />
-					<token key="UPDATES_DIR" value="${release.update_dir}" />
-					<token key="S3.CDNHOSTNAME" value="${s3.cdnhostname}" />
-					<token key="S3.SIGNATURE" value="${s3.signature}" />
-					<token key="S3.REGION" value="${s3.region}" />
-
-					<token key="SFTP.HOST" value="${scp.host}" />
-					<token key="SFTP.DIR" value="${scp.dir}" />
-					<token key="SFTP.PORT" value="${scp.port}" />
-					<token key="SFTP.USERNAME" value="${scp.username}" />
-					<token key="SFTP.PASSWORD" value="${scp.password}" />
-
-					<token key="SFTP.PUBKEYFILE" value="${scp.pubkeyfile}" />
-					<token key="SFTP.PRIVKEYFILE" value="${scp.privkeyfile}" />
-					<token key="SFTP.PRIVKEYFILE.PASS" value="${scp.privkeyfilepassphrase}" />
-
-					<token key="CORE.METHOD" value="${release.core.method}" />
-					<token key="CORE.DIR" value="${release.core.dir}" />
-					<token key="CORE.PATTERN" value="XXX_ZZZ_NO_CORE" />
-					<token key="CORE.UPDATEBASE" value="${release.core.update_basename}" />
-					<token key="CORE.UPDATESTREAM" value="${release.core.update_stream}" />
-					<token key="CORE.ACCESS" value="${release.core.access_level}" />
-					<token key="CORE.UPDATEFORMATS" value="${release.core.update.formats}" />
-
-					<token key="PRO.METHOD" value="${release.pro.method}" />
-					<token key="PRO.DIR" value="${release.pro.dir}" />
-					<token key="PRO.PATTERN" value="XXX_ZZZ_NO_PRO" />
-					<token key="PRO.UPDATEBASE" value="${release.pro.update_basename}" />
-					<token key="PRO.UPDATESTREAM" value="${release.pro.update_stream}" />
-					<token key="PRO.ACCESS" value="${release.pro.access_level}" />
-					<token key="PRO.UPDATEFORMATS" value="${release.pro.update.formats}" />
-
-					<token key="DOCS.WHERE" value="${release.docs.where}" />
-					<token key="DOCS.WHICH" value="[]" />
-
-				</replacetokens>
-			</filterchain>
-		</copy>
-
-		<exec executable="${system.php_cli}" dir="${dirs.root}" passthru="true" checkreturn="true">
-			<arg file="${dirs.root}/../releasemaker/releasemaker.php" />
-			<arg value="--debug" />
-			<arg file="${dirs.root}/release.json" />
-		</exec>
-
-		<delete file="${dirs.root}/release.json" quiet="true" />
-
-		<phingcall target="onAfterRelease">
+		<phingcall target="release">
+			<property name="release.steps" value="${release.steps_update}" />
 		</phingcall>
 	</target>
 
