@@ -1264,7 +1264,7 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 					</then>
 					<else>
 						<!-- Get the FOF update XML file -->
-						<httpget url="https://akeeba-cdn.s3.amazonaws.com/updates/fof4.xml" dir="${dirs.release}" filename="fof4.tmp" followRedirects="true" />
+						<httpget url="https://akeeba-cdn.s3.amazonaws.com/updates/fof4_file.xml" dir="${dirs.release}" filename="fof4.tmp" followRedirects="true" />
 
 						<!-- Extract the latest FOF version and download location -->
 						<xslt todir="${dirs.release}" style="${dirs.root}/../buildfiles/tools/fof4latest.xslt">
