@@ -11,15 +11,12 @@
 //include_once 'phing/mappers/MergeMapper.php';
 //include_once 'phing/util/StringHelper.php';
 
-if (!class_exists('PclZip'))
-{
-	require_once __DIR__ . '/library/pclzip.lib.php';
-}
-
 require_once __DIR__ . '/library/ZipmeFileSet.php';
 
 /**
- * Creates a ZIP archive
+ * Creates a ZIP archive using ZipArchive.
+ *
+ * This works around some issues in the original ZipTask which won't let it add empty folders in the archive.
  */
 class ZipmeTask extends MatchingTask
 {
@@ -170,17 +167,58 @@ class ZipmeTask extends MatchingTask
 				throw new BuildException("ZIP file path $absolutePath is not a path.", $this->getLocation());
 			}
 
-			$zip = new PclZip($this->zipFile->getAbsolutePath());
+			$zip = new ZipArchive();
+			$openResult = $zip->open($this->zipFile->getAbsolutePath(), ZipArchive::OVERWRITE | ZipArchive::CREATE);
 
-			if ($zip->errorCode() != 1)
+			if ($openResult !== true)
 			{
-				throw new BuildException("PclZip::open() failed: " . $zip->errorInfo());
+				switch ($openResult)
+				{
+					case ZipArchive::ER_EXISTS:
+						$message = 'File already exists.';
+						break;
+
+					case ZipArchive::ER_INCONS:
+						$message = 'Zip archive inconsistent.';
+						break;
+
+					case ZipArchive::ER_INVAL:
+						$message = 'Invalid argument.';
+						break;
+
+					case ZipArchive::ER_MEMORY:
+						$message = 'Malloc failure.';
+						break;
+
+					case ZipArchive::ER_NOENT:
+						$message = 'No such file.';
+						break;
+
+					case ZipArchive::ER_NOZIP:
+						$message = 'Not a zip archive.';
+						break;
+
+					case ZipArchive::ER_OPEN:
+						$message = 'Can\'t open file.';
+						break;
+
+					case ZipArchive::ER_READ:
+						$message = 'Read error.';
+						break;
+
+					case ZipArchive::ER_SEEK:
+						$message = 'Seek error.';
+						break;
+
+				}
+				throw new BuildException("ZipArchive::open() failed: " . $message);
 			}
 
 			foreach ($this->filesets as $fs)
 			{
 				$files     = $fs->getFiles($this->project, $this->includeEmpty);
 				$fsBasedir = (null != $this->baseDir) ? $this->baseDir : $fs->getDir($this->project);
+				$removeDir = str_replace('\\', '/', $fsBasedir->getPath());
 
 				$filesToZip = array();
 
@@ -211,13 +249,31 @@ class ZipmeTask extends MatchingTask
 						continue;
 					}
 
-					$filesToZip[] = $fileAbsolutePath;
+					$fileRelativePath = str_replace('\\', '/', $fileAbsolutePath);
+
+					if (substr($fileRelativePath, 0, strlen($removeDir)) === $removeDir)
+					{
+						$fileRelativePath = substr($fileRelativePath, strlen($removeDir) + 1);
+					}
+
+					$fileRelativePath = empty($this->prefix) ? $fileRelativePath : ($this->prefix . '/' . $fileRelativePath);
+
+					if (!file_exists($fileAbsolutePath) || !is_readable($fileAbsolutePath))
+					{
+						continue;
+					}
+
+					if (is_dir($fileAbsolutePath))
+					{
+						$zip->addEmptyDir($fileRelativePath);
+					}
+					else
+					{
+						$zip->addFile($fileAbsolutePath, $fileRelativePath, 0, 0, ZipArchive::FL_ENC_UTF_8);
+						// Try to change the compression mode of every file to DEFLATE (max compatiblity)
+						$zip->setCompressionName($fileRelativePath, ZipArchive::CM_DEFLATE);
+					}
 				}
-
-				$zip->add($filesToZip,
-					PCLZIP_OPT_ADD_PATH, is_null($this->prefix) ? '' : $this->prefix,
-					PCLZIP_OPT_REMOVE_PATH, $fsBasedir->getPath());
-
 			}
 		}
 		catch (IOException $ioe)
@@ -226,6 +282,10 @@ class ZipmeTask extends MatchingTask
 			$this->filesets = $savedFileSets;
 
 			throw new BuildException($msg, $ioe, $this->getLocation());
+		}
+		finally
+		{
+			$zip->close();
 		}
 
 		$this->filesets = $savedFileSets;
