@@ -269,7 +269,8 @@ class ZipmeTask extends MatchingTask
 					}
 					else
 					{
-						$zip->addFile($fileAbsolutePath, $fileRelativePath, 0, 0, ZipArchive::FL_ENC_UTF_8);
+						$zip->addFile($fileAbsolutePath, $fileRelativePath);
+						//$zip->addFile($fileAbsolutePath, $fileRelativePath, 0, 0, ZipArchive::FL_ENC_UTF_8);
 						// Try to change the compression mode of every file to DEFLATE (max compatiblity)
 						$zip->setCompressionName($fileRelativePath, ZipArchive::CM_DEFLATE);
 					}
