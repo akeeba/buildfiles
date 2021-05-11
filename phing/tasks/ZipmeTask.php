@@ -168,7 +168,7 @@ class ZipmeTask extends MatchingTask
 			}
 
 			$zip = new ZipArchive();
-			$openResult = $zip->open($this->zipFile->getAbsolutePath(), ZipArchive::OVERWRITE | ZipArchive::CREATE);
+			$openResult = $zip->open($this->zipFile->getAbsolutePath(), ZipArchive::CREATE);
 
 			if ($openResult !== true)
 			{
