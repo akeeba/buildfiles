@@ -41,6 +41,9 @@
     <!-- ### Version numbers -->
     <property name="version" value="git" />
 
+	<!-- ### Overrideable parameters -->
+	<property name="build.package_base_name" value="${build.component}" />
+
     <!-- Load externally defined properties -->
     <!-- ### Default properties, located next to the common.xml file -->
     <property file="${phing.dir.common}/default.properties" />
@@ -1474,7 +1477,7 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 				<!-- XML Manifest name: pkg_something.xml -->
 				<property name="build.template_xml" value="pkg_${build.component}.xml" />
 				<!-- Package name: pkg_something-1.2.3.zip -->
-				<property name="build.package_name" value="pkg_${build.component}-${version}.zip" />
+				<property name="build.package_name" value="pkg_${build.package_base_name}-${version}.zip" />
 				<!-- Fileset reference ID: package -->
 				<property name="build.refid" value="package" />
 			</then>
@@ -1492,7 +1495,7 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 				<!-- XML Manifest name: pkg_something_core.xml -->
 				<property name="build.template_xml" value="pkg_${build.component}_${build.suffix}.xml" />
 				<!-- Package name: pkg_something-1.2.3-core.zip -->
-				<property name="build.package_name" value="pkg_${build.component}-${version}-${build.suffix}.zip" />
+				<property name="build.package_name" value="pkg_${build.package_base_name}-${version}-${build.suffix}.zip" />
 				<!-- Fileset reference ID: package-core -->
 				<property name="build.refid" value="package-${build.suffix}" />
 			</else>
