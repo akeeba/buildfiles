@@ -7,7 +7,7 @@
 
 use Github\Client;
 
-if (!class_exists('Github\\Client'))
+if (!class_exists('\\Composer\\Autoload\\ClassLoader'))
 {
 	$autoloaderFile = __DIR__ . '/../../../vendor/autoload.php';
 
@@ -28,7 +28,7 @@ HOW TO FIX
 
 Go to the buildfiles repository and run:
 
-php ./composer.phar install
+composer install
 
 
 END;
@@ -118,7 +118,7 @@ abstract class GitHubTask extends Task
 		 * fail.
 		 */
 		$guzzleClient  = new \GuzzleHttp\Client([
-			'verify' => __DIR__ . '/cacert.pem' ,
+			'verify' => \Composer\CaBundle\CaBundle::getBundledCaBundlePath() ,
 		]);
 
 		// Then we need to create an HTTPlug client adapter to the Guzzle client

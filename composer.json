@@ -4,17 +4,19 @@
 	"license": "GPLv3",
 	"minimum-stability": "beta",
 	"require": {
-		"php": "^7.3",
+		"php": ">=7.3 <8.1",
 		"ext-curl": "*",
 		"ext-xsl": "*",
 		"ext-zlib": "*",
 		"ext-dom": "*",
-		"knplabs/github-api": "^2.0",
-		"php-http/guzzle6-adapter": "^1.1",
+		"ext-zip": "*",
+		"php-http/guzzle6-adapter": "^2.0",
+		"nyholm/psr7": "^1.0",
+		"knplabs/github-api": "^3.0",
 		"corneltek/getoptionkit": "^2.6.0",
 		"czproject/git-php": "^3.10.0",
 		"akeeba/s3": "dev-development",
-		"ext-zip": "*"
+		"composer/ca-bundle": "^1.2"
 	},
 	"suggest": {
 		"ext-ssh2": "*"

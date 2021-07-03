@@ -7,6 +7,37 @@
 
 namespace Akeeba\BuildLang;
 
+if (!class_exists('\\Composer\\Autoload\\ClassLoader'))
+{
+	$autoloaderFile = __DIR__ . '/../../vendor/autoload.php';
+
+	if (!file_exists($autoloaderFile))
+	{
+		echo <<< END
+
+********************************************************************************
+**                                   WARNING                                  **
+********************************************************************************
+
+You have NOT initialized Composer on the buildfiles repository. This script is
+about to die with an error.
+
+--------------------------------------------------------------------------------
+HOW TO FIX
+--------------------------------------------------------------------------------
+
+Go to the buildfiles repository and run:
+
+composer install
+
+
+END;
+
+		throw new \RuntimeException("Composer is not initialized in the buildfiles repository");
+	}
+
+	require_once $autoloaderFile;
+}
 
 use Akeeba\Engine\Postproc\Connector\S3v4\Acl;
 use Akeeba\Engine\Postproc\Connector\S3v4\Input;
@@ -16,6 +47,7 @@ use Akeeba\LinkLibrary\Scanner\Module;
 use Akeeba\LinkLibrary\Scanner\Plugin;
 use Akeeba\LinkLibrary\Scanner\Template;
 use Akeeba\LinkLibrary\ScannerInterface;
+use Composer\CaBundle\CaBundle;
 use RuntimeException;
 use ZipArchive;
 
@@ -493,7 +525,7 @@ XML;
 			CURLOPT_HEADER         => false,
 			CURLINFO_HEADER_OUT    => false,
 			CURLOPT_RETURNTRANSFER => true,
-			CURLOPT_CAINFO         => __DIR__ . '/../../phing/tasks/library/cacert.pem',
+			CURLOPT_CAINFO         => CaBundle::getBundledCaBundlePath(),
 			CURLOPT_HTTPHEADER     => [
 				'Authorization: Token ' . $this->parameters->weblateApiKey,
 			],
