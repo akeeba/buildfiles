@@ -7,13 +7,11 @@
 
 use Github\Client;
 
-if (!class_exists('\\Composer\\Autoload\\ClassLoader'))
-{
-	$autoloaderFile = __DIR__ . '/../../../vendor/autoload.php';
+$autoloaderFile = __DIR__ . '/../../../vendor/autoload.php';
 
-	if (!file_exists($autoloaderFile))
-	{
-		echo <<< END
+if (!file_exists($autoloaderFile))
+{
+	echo <<< END
 
 ********************************************************************************
 **                                   WARNING                                  **
@@ -33,11 +31,10 @@ composer install
 
 END;
 
-		throw new \RuntimeException("Composer is not initialized in the buildfiles repository");
-	}
-
-	require_once $autoloaderFile;
+	throw new \RuntimeException("Composer is not initialized in the buildfiles repository");
 }
+
+require_once $autoloaderFile;
 
 /**
  * Abstract base class for GitHub tasks
@@ -137,6 +134,6 @@ abstract class GitHubTask extends Task
 			throw new RuntimeException('You need to provide your GitHub token.');
 		}
 
-		$this->client->authenticate($this->token, null, Client::AUTH_HTTP_TOKEN);
+		$this->client->authenticate($this->token, null, Client::AUTH_ACCESS_TOKEN);
 	}
 }
