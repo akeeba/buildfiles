@@ -99,7 +99,7 @@ class XmlVersionTask extends Task
 				case 'json':
 					if ($entry->getBasename() != 'joomla.asset.json')
 					{
-						continue;
+						continue 2;
 					}
 
 					echo $entry->getPathname();
@@ -110,7 +110,7 @@ class XmlVersionTask extends Task
 					break;
 
 				default:
-					continue;
+					continue 2;
 			}
 
 		}
@@ -191,6 +191,8 @@ class XmlVersionTask extends Task
 			realpath($this->repository) . '/component',
 			realpath($this->repository) . '/plugins',
 			realpath($this->repository) . '/modules',
+			realpath($this->repository) . '/templates/admin',
+			realpath($this->repository) . '/templates/site',
 		];
 
 		array_walk($paths, [$this, 'scan']);
