@@ -1523,6 +1523,18 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 			</then>
 		</if>
 
+		<!-- Copy the language folder, if present -->
+		<if>
+			<available property="completely.ignored" file="${phing.dir}/templates/language" type="dir" />
+			<then>
+				<copy todir="${dirs.release}" overwrite="true">
+					<fileset dir="${phing.dir}/templates">
+						<include name="language/**" />
+					</fileset>
+				</copy>
+			</then>
+		</if>
+
 		<!-- Copy the script.something.php installation script file, if present -->
 		<if>
 			<available property="completely.ignored" file="${phing.dir}/templates/script.${build.component}.php" />
