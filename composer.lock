@@ -123,16 +123,16 @@
         },
         {
             "name": "composer/ca-bundle",
-            "version": "1.2.11",
+            "version": "1.3.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/ca-bundle.git",
-                "reference": "0b072d51c5a9c6f3412f7ea3ab043d6603cb2582"
+                "reference": "4c679186f2aca4ab6a0f1b0b9cf9252decb44d0b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/0b072d51c5a9c6f3412f7ea3ab043d6603cb2582",
-                "reference": "0b072d51c5a9c6f3412f7ea3ab043d6603cb2582",
+                "url": "https://api.github.com/repos/composer/ca-bundle/zipball/4c679186f2aca4ab6a0f1b0b9cf9252decb44d0b",
+                "reference": "4c679186f2aca4ab6a0f1b0b9cf9252decb44d0b",
                 "shasum": ""
             },
             "require": {
@@ -179,7 +179,7 @@
             "support": {
                 "irc": "irc://irc.freenode.org/composer",
                 "issues": "https://github.com/composer/ca-bundle/issues",
-                "source": "https://github.com/composer/ca-bundle/tree/1.2.11"
+                "source": "https://github.com/composer/ca-bundle/tree/1.3.1"
             },
             "funding": [
                 {
@@ -195,7 +195,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2021-09-25T20:32:43+00:00"
+            "time": "2021-10-28T20:44:15+00:00"
         },
         {
             "name": "composer/package-versions-deprecated",
@@ -417,16 +417,16 @@
         },
         {
             "name": "corneltek/getoptionkit",
-            "version": "2.6.0",
+            "version": "2.6.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/c9s/GetOptionKit.git",
-                "reference": "995607ddf4fc90ebdb4a7d58fe972d581ad8495f"
+                "reference": "1121ee17f304cd7e2d8d2b818df86b6af5f07485"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/c9s/GetOptionKit/zipball/995607ddf4fc90ebdb4a7d58fe972d581ad8495f",
-                "reference": "995607ddf4fc90ebdb4a7d58fe972d581ad8495f",
+                "url": "https://api.github.com/repos/c9s/GetOptionKit/zipball/1121ee17f304cd7e2d8d2b818df86b6af5f07485",
+                "reference": "1121ee17f304cd7e2d8d2b818df86b6af5f07485",
                 "shasum": ""
             },
             "require": {
@@ -457,9 +457,9 @@
             "homepage": "http://github.com/c9s/GetOptionKit",
             "support": {
                 "issues": "https://github.com/c9s/GetOptionKit/issues",
-                "source": "https://github.com/c9s/GetOptionKit/tree/2.6.0"
+                "source": "https://github.com/c9s/GetOptionKit/tree/2.6.1"
             },
-            "time": "2017-06-30T14:54:48+00:00"
+            "time": "2021-11-22T09:15:28+00:00"
         },
         {
             "name": "czproject/git-php",
