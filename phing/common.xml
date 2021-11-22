@@ -63,6 +63,7 @@
     <taskdef name="GitHubAsset" classname="tasks.GitHubAssetTask" />
     <taskdef name="GitHubRelease" classname="tasks.GitHubReleaseTask" />
     <taskdef name="gitversion" classname="tasks.GitVersionTask" />
+    <taskdef name="autoversion" classname="tasks.AutoVersionTask" />
     <taskdef name="jpa" classname="tasks.JPATask" />
     <taskdef name="link" classname="tasks.LinkTask" />
     <taskdef name="projectlink" classname="tasks.ProjectLinkTask" />
@@ -109,8 +110,11 @@
         <if>
             <equals arg1="${version}" arg2="git" />
             <then>
-                <gitversion workingcopy="${dirs.root}" propertyname="git.lastrevision" />
+				<autoversion workingCopy="${dirs.root}" propertyName="version" />
+                <!--
+				<gitversion workingcopy="${dirs.root}" propertyname="git.lastrevision" />
                 <property name="version" value="rev${git.lastrevision}" override="true" />
+                -->
             </then>
         </if>
     </target>
