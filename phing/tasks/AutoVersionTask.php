@@ -252,6 +252,10 @@ class AutoVersionTask extends Task
 
 		// The first line should be "Something something something VERSION" or just "VERSION"
 		$firstLine = array_shift($lines);
+		$parts     = explode(' ', $firstLine);
+		$firstLine = array_pop($parts);
+
+		// The first line should be "Something something something VERSION" or just "VERSION"
 
 		if (!preg_match('/((\d+\.?)+)(((a|alpha|b|beta|rc|dev)\d)*(-[^\s]*)?)?/', $firstLine, $matches))
 		{
