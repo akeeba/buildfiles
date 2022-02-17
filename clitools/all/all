@@ -14,6 +14,7 @@ usage () {
 	echo "tidy	  Perform local Git repo housekeeping"
 	echo "status  Report repositories with uncommitted changes"
 	echo "branch  Which branch am I in?"
+	echo "cloneme Generate git clone commands"
 	echo -e $COLOR_BLUE"Using Akeeba Build Files"$COLOR_NC
 	echo "build   Run the Phing 'git' task to rebuild the software"
 	echo "link    Internal relink"
@@ -88,6 +89,13 @@ do
 			git remote prune origin
 			git gc
 			;;
+
+    cloneme )
+      ZZZ_CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
+      ZZZ_REMOTE=`git config --get remote.origin.url`
+
+      echo git clone -b $ZZZ_CUR_BRANCH "$ZZZ_REMOTE" $d
+      ;;
 
     branch )
       ZZZ_CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
