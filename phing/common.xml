@@ -1079,13 +1079,49 @@
 	<target name="package-module-item" description="Package a single module">
 		<echo message="Packaging module ${module_area}/${module_name}" />
 
+		<if>
+			<not>
+				<equals arg1="${build.has_pro}" arg2="1" />
+			</not>
+			<then>
+				<property name="module_refid" value="mod_${module_area}_${module_name}" />
+			</then>
+			<else>
+				<!-- Distinct Pro / Core versions, use a suffix -->
+				<if>
+					<equals arg1="${build.is_pro}" arg2="1" />
+					<then>
+						<property name="module_refid" value="mod_${module_area}_${module_name}_pro" />
+					</then>
+					<else>
+						<property name="module_refid" value="mod_${module_area}_${module_name}_core" />
+					</else>
+				</if>
+			</else>
+		</if>
+
 		<property name="module_package" value="${dirs.release}/mod_${module_name}.zip" />
 
-		<zipme basedir="${module_dir}" destfile="${module_package}" includeemptydirs="true">
-			<fileset dir="${module_dir}">
-				<include name="**" />
-			</fileset>
-		</zipme>
+		<if>
+			<not>
+				<referenceexists ref="${plugin_refid}" />
+			</not>
+			<then>
+				<zipme basedir="${module_dir}" destfile="${module_package}" includeemptydirs="true">
+					<fileset dir="${module_dir}">
+						<include name="**" />
+					</fileset>
+				</zipme>
+			</then>
+			<else>
+				<zipme basedir="${module_dir}" destfile="${module_package}" includeemptydirs="true">
+					<fileset dir="${module_dir}">
+						<patternset refid="${module_refid}" />
+					</fileset>
+				</zipme>
+			</else>
+		</if>
+
 	</target>
 
 	<!--
@@ -1119,17 +1155,52 @@
 	-->
 	<target name="package-plugin-item" description="Package a single plugin">
 		<echo message="Packaging plugin ${plugin_area}/${plugin_name}" />
+		<!-- Determine the name of the XML manifest template file, package file and the fileset reference ID -->
+		<if>
+			<not>
+				<equals arg1="${build.has_pro}" arg2="1" />
+			</not>
+			<then>
+				<property name="plugin_refid" value="plg_${plugin_area}_${plugin_name}" />
+			</then>
+			<else>
+				<!-- Distinct Pro / Core versions, use a suffix -->
+				<if>
+					<equals arg1="${build.is_pro}" arg2="1" />
+					<then>
+						<property name="plugin_refid" value="plg_${plugin_area}_${plugin_name}_pro" />
+					</then>
+					<else>
+						<property name="plugin_refid" value="plg_${plugin_area}_${plugin_name}_core" />
+					</else>
+				</if>
+			</else>
+		</if>
 
 		<property name="plugin_package" value="${dirs.release}/plg_${plugin_area}_${plugin_name}.zip" />
 
-		<zipme basedir="${plugin_dir}" destfile="${plugin_package}" includeemptydirs="true">
-			<fileset dir="${plugin_dir}">
-				<include name="**" />
-				<exclude name="composer.phar" />
-				<exclude name="composer.json" />
-				<exclude name="composer.lock" />
-			</fileset>
-		</zipme>
+		<if>
+			<not>
+				<referenceexists ref="${plugin_refid}" />
+			</not>
+			<then>
+				<zipme basedir="${plugin_dir}" destfile="${plugin_package}" includeemptydirs="true">
+					<fileset dir="${plugin_dir}">
+						<include name="**" />
+						<exclude name="composer.phar" />
+						<exclude name="composer.json" />
+						<exclude name="composer.lock" />
+					</fileset>
+				</zipme>
+			</then>
+			<else>
+				<zipme basedir="${plugin_dir}" destfile="${plugin_package}" includeemptydirs="true">
+					<fileset dir="${plugin_dir}">
+						<patternset refid="${plugin_refid}" />
+					</fileset>
+				</zipme>
+			</else>
+		</if>
 	</target>
 
 	<!--
