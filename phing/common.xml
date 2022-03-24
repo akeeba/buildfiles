@@ -1590,6 +1590,9 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 			</filterchain>
 		</copy>
 
+		<!-- Copy the package XML file to the repo root -->
+		<copy file="${dirs.release}/pkg_${build.component}.xml" tofile="${dirs.root}/pkg_${build.component}.xml" overwrite="true" />
+
 		<!-- Copy the LICENSE.txt file, if present -->
 		<if>
 			<available property="completely.ignored" file="${dirs.component}/LICENSE.txt" />

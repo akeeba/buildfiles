@@ -50,63 +50,72 @@ class Package extends AbstractScanner
 	 */
 	public static function detect(string $repositoryRoot): array
 	{
-		$path       = $repositoryRoot . '/build/templates';
+		$possiblePaths = [
+			$repositoryRoot                      => $repositoryRoot . '/build/templates/language',
+			$repositoryRoot . '/build/templates' => null,
+		];
+
 		$extensions = [];
 
-		if (!is_dir($path))
+		foreach ($possiblePaths as $path => $languageRoot)
 		{
-			return $extensions;
-		}
-
-		// Loop all packages in the section
-		$di = new \DirectoryIterator($path);
-
-		/** @var \DirectoryIterator $file */
-		foreach ($di as $file)
-		{
-			if ($file->isDir() || $file->getExtension() !== 'xml')
+			if (!is_dir($path))
 			{
 				continue;
 			}
 
-			if (substr($file->getBasename('.' . $file->getExtension()), -5) === '_core')
+			// Loop all packages in the section
+			$di = new \DirectoryIterator($path);
+
+			/** @var \DirectoryIterator $file */
+			foreach ($di as $file)
 			{
-				continue;
-			}
+				if ($file->isDir() || $file->getExtension() !== 'xml')
+				{
+					continue;
+				}
 
-			// Is this the right kind of XML file?
-			$xmlDoc = new \DOMDocument();
-			$xmlDoc->load($file->getPathname(), LIBXML_NOBLANKS | LIBXML_NOCDATA | LIBXML_NOENT | LIBXML_NONET);
+				if (substr($file->getBasename('.' . $file->getExtension()), -5) === '_core')
+				{
+					continue;
+				}
 
-			$rootNodes = $xmlDoc->getElementsByTagname('extension');
+				// Is this the right kind of XML file?
+				$xmlDoc = new \DOMDocument();
+				$xmlDoc->load($file->getPathname(), LIBXML_NOBLANKS | LIBXML_NOCDATA | LIBXML_NOENT | LIBXML_NONET);
 
-			if ($rootNodes->length < 1)
-			{
+				$rootNodes = $xmlDoc->getElementsByTagname('extension');
+
+				if ($rootNodes->length < 1)
+				{
+					unset($xmlDoc);
+					continue;
+				}
+
+				$root = $rootNodes->item(0);
+
+				if (!$root->hasAttributes())
+				{
+					unset($xmlDoc);
+					continue;
+				}
+
+				if ($root->getAttribute('type') != 'package')
+				{
+					unset($xmlDoc);
+					continue;
+				}
+
 				unset($xmlDoc);
-				continue;
+
+				$basePath      = $file->getPath();
+				$forcedXmlFile = $file->getBasename();
+
+				// Get the extension ScannerInterface object
+				$extensions[] = new Package($basePath, null, $forcedXmlFile);
+
+				return $extensions;
 			}
-
-			$root = $rootNodes->item(0);
-
-			if (!$root->hasAttributes())
-			{
-				unset($xmlDoc);
-				continue;
-			}
-
-			if ($root->getAttribute('type') != 'package')
-			{
-				unset($xmlDoc);
-				continue;
-			}
-
-			unset($xmlDoc);
-
-			$basePath      = $file->getPath();
-			$forcedXmlFile = $file->getBasename();
-
-			// Get the extension ScannerInterface object
-			$extensions[] = new Package($basePath, null, $forcedXmlFile);
 		}
 
 		return $extensions;
@@ -218,7 +227,7 @@ class Package extends AbstractScanner
 		if (!empty($this->xmlManifestPath))
 		{
 			$result->files = array_merge($result->files, [
-				$this->xmlManifestPath => $this->siteRoot . '/administrator/manifests/packages/' . $scan->getJoomlaExtensionName() . '.xml'
+				$this->xmlManifestPath => $this->siteRoot . '/administrator/manifests/packages/' . $scan->getJoomlaExtensionName() . '.xml',
 			]);
 		}
 
