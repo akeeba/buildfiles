@@ -7,9 +7,12 @@
 
 namespace Akeeba\LinkLibrary;
 
+use Akeeba\LinkLibrary\Scanner\AbstractScanner;
 use Akeeba\LinkLibrary\Scanner\Component;
+use Akeeba\LinkLibrary\Scanner\File;
 use Akeeba\LinkLibrary\Scanner\Library;
 use Akeeba\LinkLibrary\Scanner\Module;
+use Akeeba\LinkLibrary\Scanner\Package;
 use Akeeba\LinkLibrary\Scanner\Plugin;
 use Akeeba\LinkLibrary\Scanner\Template;
 use RuntimeException;
@@ -42,6 +45,13 @@ class Relink
 	private $verbose = false;
 
 	/**
+	 * Dry run mode (no filesystem changes)?
+	 *
+	 * @var   bool
+	 */
+	private $dryRun = false;
+
+	/**
 	 * Relink constructor.
 	 *
 	 * @param   string  $repositoryRoot  The root of the repository to use
@@ -57,11 +67,13 @@ class Relink
 		$this->extensions     = [];
 
 		// Detect extensions
+		$this->extensions = array_merge($this->extensions, Package::detect($this->repositoryRoot));
 		$this->extensions = array_merge($this->extensions, Component::detect($this->repositoryRoot));
 		$this->extensions = array_merge($this->extensions, Library::detect($this->repositoryRoot));
 		$this->extensions = array_merge($this->extensions, Module::detect($this->repositoryRoot));
 		$this->extensions = array_merge($this->extensions, Plugin::detect($this->repositoryRoot));
 		$this->extensions = array_merge($this->extensions, Template::detect($this->repositoryRoot));
+		$this->extensions = array_merge($this->extensions, File::detect($this->repositoryRoot));
 	}
 
 	/**
@@ -91,6 +103,7 @@ class Relink
 	 */
 	public function relink($siteRoot)
 	{
+		/** @var AbstractScanner $extension */
 		foreach ($this->extensions as $extension)
 		{
 			if ($this->verbose)
@@ -100,6 +113,8 @@ class Relink
 			}
 
 			$extension->setSiteRoot($siteRoot);
+			$extension->setVerbose($this->dryRun && $this->verbose);
+			$extension->setDryRun($this->dryRun);
 			$extension->relink();
 		}
 	}
@@ -112,5 +127,15 @@ class Relink
 	public function setVerbose(bool $verbose)
 	{
 		$this->verbose = $verbose;
+	}
+
+	/**
+	 * Set the Dry Run mode flag
+	 *
+	 * @param   bool  $dryRun
+	 */
+	public function setDryRun(bool $dryRun): void
+	{
+		$this->dryRun = $dryRun;
 	}
 }

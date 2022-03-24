@@ -83,13 +83,16 @@ class Component extends AbstractScanner
 			$result->mediaDestination = $allMediaTags->item(0)->getAttribute('destination');
 		}
 
-		// Do we have a CLI folder
+		// Do we have a CLI folder -- OBSOLETE; we now scan for File extensions
+		$result->cliFolder = '';
+		/**
 		$result->cliFolder = $this->extensionRoot . '/cli';
 
 		if (!is_dir($result->cliFolder))
 		{
 			$result->cliFolder = '';
 		}
+		/**/
 
 		// Get the <languages> tags for front and back-end
 		$xpath = new \DOMXPath($xmlDoc);
@@ -234,7 +237,7 @@ class Component extends AbstractScanner
 		}
 
 		// Get the extension ScannerInterface object
-		$extension = new Component($path, $translationsRoot);
+		$extension = new Component($path, $languageRoot);
 
 		return [$extension];
 	}

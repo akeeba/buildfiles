@@ -1,25 +1,26 @@
 {
-	"name": "akeeba/buildtools",
-	"description": "Build utilities for Akeeba software",
-	"license": "GPLv3",
-	"minimum-stability": "beta",
-	"require": {
-		"php": ">=7.3 <8.1",
-		"ext-curl": "*",
-		"ext-xsl": "*",
-		"ext-zlib": "*",
-		"ext-dom": "*",
-		"ext-zip": "*",
-		"php-http/guzzle6-adapter": "^2.0",
-		"nyholm/psr7": "^1.0",
-		"knplabs/github-api": "^3.0",
-		"corneltek/getoptionkit": "^2.6.0",
-		"czproject/git-php": "^3.10.0",
-		"akeeba/s3": "dev-development",
-		"composer/ca-bundle": "^1.2",
-		"rector/rector": "^0.10"
-	},
-	"suggest": {
-		"ext-ssh2": "*"
-	}
+  "name": "akeeba/buildtools",
+  "description": "Build utilities for Akeeba software",
+  "license": "GPLv3",
+  "minimum-stability": "beta",
+  "require": {
+    "php": ">=7.3 <8.1",
+    "ext-curl": "*",
+    "ext-xsl": "*",
+    "ext-zlib": "*",
+    "ext-dom": "*",
+    "ext-zip": "*",
+    "ext-libxml": "*",
+    "php-http/guzzle6-adapter": "^2.0",
+    "nyholm/psr7": "^1.0",
+    "knplabs/github-api": "^3.0",
+    "corneltek/getoptionkit": "^2.6.0",
+    "czproject/git-php": "^3.10.0",
+    "akeeba/s3": "dev-development",
+    "composer/ca-bundle": "^1.2",
+    "rector/rector": "^0.10"
+  },
+  "suggest": {
+    "ext-ssh2": "*"
+  }
 }

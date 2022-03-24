@@ -92,9 +92,19 @@ class RelinkSiteTask extends Task
 			throw new BuildException("Repository folder {$this->repository} is not a valid directory");
 		}
 
-		$relink = new \Akeeba\LinkLibrary\Relink($this->repository);
-		$relink->setVerbose(true);
-		$relink->relink($this->site);
+		@error_reporting(E_ALL);
+		try
+		{
+			$relink = new \Akeeba\LinkLibrary\Relink($this->repository);
+			$relink->setVerbose(true);
+			$relink->relink($this->site);
+		}
+		catch (Throwable $e)
+		{
+			echo $e->getMessage();
+
+			die;
+		}
 
 		return true;
 	}

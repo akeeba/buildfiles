@@ -13,7 +13,7 @@ namespace Akeeba\LinkLibrary;
 final class ScanResult
 {
 	/**
-	 * Type of the extension which was scanned: component, module, plugin, template, library
+	 * Type of the extension which was scanned: component, module, plugin, template, library, package
 	 *
 	 * @var  string
 	 */
@@ -173,6 +173,53 @@ final class ScanResult
 	public $apiLangFiles = [];
 
 	/**
+	 * The name of the script file of the extension.
+	 *
+	 * Only applies to extension types where the script is outside the main extension directory, i.e. file, package and
+	 * library extensions.
+	 *
+	 * @var string
+	 */
+	public $scriptFileName = '';
+
+	/**
+	 * List of the filesets of a Joomla file extension, keyed by target directory (relative path).
+	 *
+	 * For example, the following manifest:
+	 * ```xml
+	 * <fileset>
+	 *   <files target="cli">
+	 *     <file>foo.php</file>
+	 *   </files>
+	 *   <files target="media/foobar">
+	 *     <file>bar.php</file>
+	 *   </files>
+	 * </fileset>
+	 * ```
+	 * results in the array:
+	 * ```php
+	 * [
+	 *   'cli' => [
+	 *     'foo.php'
+	 *    ],
+	 *   'media/foobar' => [
+	 *     'bar.php'
+	 *   ]
+	 * ]
+	 * ```
+	 *
+	 * @var  array
+	 */
+	public $fileSets = [];
+
+	/**
+	 * Same as $fileSets but for the <folder> tags nested inside the <fileset> tags.
+	 *
+	 * @var array
+	 */
+	public $folderSets = [];
+
+	/**
 	 * Return the name of the extension as it'd be reported by Joomla
 	 *
 	 * @param   bool  $includeSiteAdmin  If enabled, modules and templates will have a site_ or admin_ indicator before
@@ -191,7 +238,7 @@ final class ScanResult
 			case 'module':
 				if ($includeSiteAdmin)
 				{
-					list($prefix, $extension) = explode('_', $this->extension);
+					[$prefix, $extension] = explode('_', $this->extension);
 
 					if (!empty($this->siteFolder))
 					{
@@ -232,8 +279,13 @@ final class ScanResult
 				$prefix = 'lib_';
 				break;
 
+			case 'package':
+				$prefix = 'pkg_';
+				break;
+
 			case 'files':
-				$prefix = 'file_';
+			case 'file':
+				$prefix = '';
 				break;
 		}
 

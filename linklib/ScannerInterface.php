@@ -87,4 +87,22 @@ interface ScannerInterface
 	 * @return  string
 	 */
 	public function getKeyName();
+
+	/**
+	 * Set the verbose output flag.
+	 *
+	 * @param   bool  $value  The flag value to set.
+	 *
+	 * @return  void
+	 */
+	public function setVerbose(bool $value): void;
+
+	/**
+	 * Set the Dry Run flag.
+	 *
+	 * @param   bool  $value  The flag value to set.
+	 *
+	 * @return  void
+	 */
+	public function setDryRun(bool $value): void;
 }

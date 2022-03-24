@@ -18,6 +18,13 @@ use RuntimeException;
 abstract class AbstractScanner implements ScannerInterface
 {
 	/**
+	 * The root folder of the translation files (other than inside the extension itself, holding all languages)
+	 *
+	 * @var  string
+	 */
+	private static $translationsRoot = null;
+
+	/**
 	 * The absolute path to the extension's root folder.
 	 *
 	 * @var   string
@@ -53,6 +60,13 @@ abstract class AbstractScanner implements ScannerInterface
 	protected $manifestExtensionType = '';
 
 	/**
+	 * The path to the detected XML manifest
+	 *
+	 * @var   string|null
+	 */
+	protected $xmlManifestPath;
+
+	/**
 	 * The results of scanning the extension
 	 *
 	 * @var   ScanResult
@@ -67,11 +81,18 @@ abstract class AbstractScanner implements ScannerInterface
 	private $mapResult = null;
 
 	/**
-	 * The root folder of the translation files (other than inside the extension itself, holding all languages)
+	 * Set verbose output?
 	 *
-	 * @var  string
+	 * @var   bool
 	 */
-	private static $translationsRoot = null;
+	private $verbose = false;
+
+	/**
+	 * Set Dry Run mode?
+	 *
+	 * @var   bool
+	 */
+	private $dryRun = false;
 
 	/**
 	 * Constructor.
@@ -79,15 +100,15 @@ abstract class AbstractScanner implements ScannerInterface
 	 * The languageRoot is optional and applies only if the languages are stored in a directory other than the one
 	 * specified in the extension's XML file.
 	 *
-	 * @param   string  $extensionRoot  The absolute path to the extension's root folder
-	 * @param   string  $languageRoot   The absolute path to the extension's language folder (optional)
+	 * @param   string       $extensionRoot  The absolute path to the extension's root folder
+	 * @param   string|null  $languageRoot   The absolute path to the extension's language folder (optional)
 	 */
 	public function __construct($extensionRoot, $languageRoot = null)
 	{
 		// Make sure the extension root exists
 		if (!is_dir($extensionRoot) || !is_readable($extensionRoot))
 		{
-			throw new RuntimeException("Cannot scan extension in non-existent or unreadable folder $this->extensionRoot");
+			throw new RuntimeException("Cannot scan extension in non-existent or unreadable folder $extensionRoot");
 		}
 
 		$this->extensionRoot = $extensionRoot;
@@ -108,76 +129,57 @@ abstract class AbstractScanner implements ScannerInterface
 	}
 
 	/**
-	 * Find the XML manifest in an extension's directory and return the DOMDocument for it.
+	 * Get the root folder for the translation files in all languages. This is a directory in the root of the repository
+	 * called "translations". Inside it you have all language files using the following structure:
 	 *
-	 * @param   string   $root           The folder to look into.
-	 * @param   string   $extensionType  The expected type of the extension, null to not perform this check.
+	 * component
+	 *      frontend
+	 *          en-GB, ...
+	 *      backend
+	 *          en-GB, ...
+	 * plugins
+	 *      somePluginFolder
+	 *          pluginName
+	 *              en-GB, ...
+	 *          otherPlugins...
+	 *      otherPluginFolders...
+	 * modules
+	 *      site
+	 *          frontendModuleName
+	 *              en-GB, ...
+	 *          otherFrontendModules,...
+	 *      admin
+	 *          frontendModuleName
+	 *              en-GB, ...
+	 *          otherFrontendModules,...
 	 *
-	 * @return  DOMDocument|null  The DOMDocument for the XML manifest or null if none was found.
+	 * @param   string  $siteRoot  The site root to check for the translations root
+	 *
+	 * @return  string
 	 */
-	protected static function findXmlManifest($root, $extensionType = null)
+	public static function getTranslationsRoot(string $siteRoot): string
 	{
-		foreach (new DirectoryIterator($root) as $fileInfo)
+		if (is_null(self::$translationsRoot))
 		{
-			if ($fileInfo->isDot() || !$fileInfo->isFile())
+			self::$translationsRoot = '';
+			$possibleFolders        = [
+				'translations', 'translation', 'languages', 'language', 'weblate', 'translate', 'strings',
+			];
+
+			foreach ($possibleFolders as $folder)
 			{
-				continue;
+				$path = $siteRoot . '/' . $folder;
+
+				if (is_dir($path))
+				{
+					self::$translationsRoot = $path;
+
+					break;
+				}
 			}
-
-			if ($fileInfo->getExtension() != 'xml')
-			{
-				continue;
-			}
-
-			$xmlDoc = new DOMDocument;
-			$xmlDoc->load($fileInfo->getRealPath(), LIBXML_NOBLANKS | LIBXML_NOCDATA | LIBXML_NOENT | LIBXML_NONET);
-
-			$rootNodes    = $xmlDoc->getElementsByTagname('extension');
-
-			if ($rootNodes->length < 1)
-			{
-				unset($xmlDoc);
-				continue;
-			}
-
-			$root = $rootNodes->item(0);
-
-			if (!$root->hasAttributes())
-			{
-				unset($xmlDoc);
-				continue;
-			}
-
-			if (!empty($extensionType) && ($root->getAttribute('type') != $extensionType))
-			{
-				unset($xmlDoc);
-				continue;
-			}
-
-			return $xmlDoc;
 		}
 
-		return null;
-	}
-
-	/**
-	 * Return the XML manifest for this extension
-	 *
-	 * @return  DOMDocument|null
-	 */
-	protected function getXMLManifest()
-	{
-		if (is_null($this->xmlManifest))
-		{
-			$this->xmlManifest = self::findXmlManifest($this->extensionRoot, $this->manifestExtensionType);
-		}
-
-		if (is_null($this->xmlManifest))
-		{
-			throw new RuntimeException("Cannot find manifest for extension in $this->extensionRoot // $this->manifestExtensionType");
-		}
-
-		return $this->xmlManifest;
+		return self::$translationsRoot;
 	}
 
 	/**
@@ -270,23 +272,74 @@ abstract class AbstractScanner implements ScannerInterface
 	{
 		$map = $this->getLinkMap();
 
-		$dirs = $map->dirs;
-		$files = $map->files;
+		$dirs      = $map->dirs;
+		$files     = $map->files;
 		$hardfiles = $map->hardfiles;
 
-		if (!empty($dirs)) foreach($dirs as $from => $to)
+		if (!empty($dirs))
 		{
-			LinkHelper::recursiveUnlink($to);
+			if ($this->verbose)
+			{
+				echo "  Unlink Directories\n";
+				echo "  " . str_repeat('-', 70) . "\n";
+			}
+
+			foreach ($dirs as $from => $to)
+			{
+				if ($this->verbose)
+				{
+					echo "    $to\n";
+				}
+
+				if (!$this->dryRun)
+				{
+					LinkHelper::recursiveUnlink($to);
+				}
+			}
 		}
 
-		if (!empty($files)) foreach($files as $from => $to)
+		if (!empty($files))
 		{
-			LinkHelper::unlink($to);
+			if ($this->verbose)
+			{
+				echo "  Unlink Files (for symlink targets)\n";
+				echo "  " . str_repeat('-', 70) . "\n";
+			}
+
+			foreach ($files as $from => $to)
+			{
+				if ($this->verbose)
+				{
+					echo "    $to\n";
+				}
+
+				if (!$this->dryRun)
+				{
+					LinkHelper::unlink($to);
+				}
+			}
 		}
 
-		if (!empty($hardfiles)) foreach($hardfiles as $from => $to)
+		if (!empty($hardfiles))
 		{
-			LinkHelper::unlink($to);
+			if ($this->verbose)
+			{
+				echo "  Unlink Files (for hardlink targets)\n";
+				echo "  " . str_repeat('-', 70) . "\n";
+			}
+
+			foreach ($hardfiles as $from => $to)
+			{
+				if ($this->verbose)
+				{
+					echo "    $to\n";
+				}
+
+				if (!$this->dryRun)
+				{
+					LinkHelper::unlink($to);
+				}
+			}
 		}
 	}
 
@@ -299,148 +352,99 @@ abstract class AbstractScanner implements ScannerInterface
 	{
 		$map = $this->getLinkMap();
 
-		$dirs = $map->dirs;
-		$files = $map->files;
+		$dirs      = $map->dirs;
+		$files     = $map->files;
 		$hardfiles = $map->hardfiles;
 
-		if (!empty($dirs)) foreach($dirs as $from => $to)
+		if (!empty($dirs))
 		{
-			LinkHelper::symlink($from, $to);
-		}
-
-		if (!empty($files)) foreach($files as $from => $to)
-		{
-			LinkHelper::symlink($from, $to);
-		}
-
-		if (!empty($hardfiles)) foreach($hardfiles as $from => $to)
-		{
-			try
+			if ($this->verbose)
 			{
-				LinkHelper::hardlink($from, $to);
-
-				continue;
-			}
-			catch (\Exception $e)
-			{
-				// Hard link failure. We can live with that since usually it's referring to CLI scripts
-				echo "An error occurred while linking $from -> $to:";
-				echo "\t" . $e->getMessage() . "\n";
+				echo "  Symlink Directories\n";
+				echo "  " . str_repeat('-', 70) . "\n";
 			}
 
-			// If an exception was raised I retry with symlinks; necessary crossing filesystems, e.g. encrypted home
-			try
+			foreach ($dirs as $from => $to)
 			{
-				LinkHelper::symlink($from, $to);
-			}
-			catch (\Exception $e)
-			{
-				// Yeah, well, screw it.
-			}
-		}
-	}
-
-	/**
-	 * Scans a <language> node in the XML manifest and returns information about the languagess.
-	 *
-	 * @param   \DOMElement  $node  The node to scan
-	 *
-	 * @return  array
-	 */
-	protected final function scanLanguageNode(\DOMElement $node)
-	{
-		$folder = $this->extensionRoot;
-		$files  = [];
-
-		if ($node->hasAttribute('folder'))
-		{
-			$folder .= '/' . $node->getAttribute('folder');
-		}
-
-		if ($node->hasChildNodes())
-		{
-			foreach ($node->childNodes as $langFile)
-			{
-				if (!($langFile instanceof \DOMElement))
+				if ($this->verbose)
 				{
+					echo "    $from => $to\n";
+				}
+
+				if (!$this->dryRun)
+				{
+					LinkHelper::symlink($from, $to);
+				}
+			}
+		}
+
+		if (!empty($files))
+		{
+			if ($this->verbose)
+			{
+				echo "  Symlink Files\n";
+				echo "  " . str_repeat('-', 70) . "\n";
+			}
+
+			foreach ($files as $from => $to)
+			{
+				if ($this->verbose)
+				{
+					echo "    $from => $to\n";
+				}
+
+				if (!$this->dryRun)
+				{
+					LinkHelper::symlink($from, $to);
+				}
+			}
+		}
+
+		if (!empty($hardfiles))
+		{
+			if ($this->verbose)
+			{
+				echo "  Hardlink files\n";
+				echo "  " . str_repeat('-', 70) . "\n";
+			}
+
+			foreach ($hardfiles as $from => $to)
+			{
+				try
+				{
+					if ($this->verbose)
+					{
+						echo "    $from => $to\n";
+					}
+
+					if (!$this->dryRun)
+					{
+						LinkHelper::hardlink($from, $to);
+					}
+
 					continue;
 				}
-
-				$tag = $langFile->getAttribute('tag');
-
-				if (!isset($files[$tag]))
+				catch (\Exception $e)
 				{
-					$files[$tag] = [];
+					// Hard link failure. We can live with that since usually it's referring to CLI scripts
+					echo "An error occurred while linking $from -> $to:";
+					echo "\t" . $e->getMessage() . "\n";
 				}
 
-				$files[$tag][] = $folder . '/' . $langFile->textContent;
-			}
-		}
-
-		return array($folder, $files);
-	}
-
-	/**
-	 * Scan a folder for Joomla! INI language files. The folder must have the structure languageTag => files e.g.
-	 * en-GB/en-GB.com_foobar.ini
-	 * en-GB/en-GB.com_foobar.sys.ini
-	 * fr-FR/fr-FR.com_foobar.ini
-	 * fr-FR/fr-FR.com_foobar.sys.ini
-	 * ...
-	 *
-	 * The returned array is keyed on language, e.g.
-	 * [
-	 *   'en-GB' => ['/path/to/en-GB/en-GB.com_foobar.ini', '/path/to/en-GB/en-GB.com_foobar.sys.ini'],
-	 *   'fr-FR' => ['/path/to/fr-FR/fr-FR.com_foobar.ini', '/path/to/fr-FR/fr-FR.com_foobar.sys.ini'],
-	 *    ...
-	 * ]
-	 *
-	 * @param   string  $langPath  The path to scan
-	 *
-	 * @return  array  The discovered language files
-	 */
-	protected final function scanLanguageFolder(string $langPath): array
-	{
-		$ret = [];
-
-		// Make sure the folder exists
-		if (!is_dir($langPath))
-		{
-			return $ret;
-		}
-
-		// Iterate the outermost folders (language tags)
-		$langFolders = new DirectoryIterator($langPath);
-
-		foreach ($langFolders as $folder)
-		{
-			if (!$folder->isDir() || $folder->isDot())
-			{
-				continue;
-			}
-
-			$tag = $folder->getFilename();
-			$ret[$tag] = [];
-
-			// Iterate the innermost files of each language folder (language files)
-			$langFiles = new DirectoryIterator($folder->getPathname());
-
-			foreach ($langFiles as $file)
-			{
-				if (!$file->isFile())
+				// If an exception was raised I retry with symlinks; necessary crossing filesystems, e.g. encrypted home
+				try
 				{
-					continue;
+					if (!$this->dryRun)
+					{
+						LinkHelper::symlink($from, $to);
+					}
 				}
-
-				if ($file->getExtension() != 'ini')
+				catch (\Exception $e)
 				{
-					continue;
+					// Yeah, well, screw it.
 				}
-
-				$ret[$tag][] = $file->getRealPath();
 			}
 		}
-		return $ret;
 	}
 
 	/**
@@ -566,61 +570,271 @@ abstract class AbstractScanner implements ScannerInterface
 	 *
 	 * @return  string
 	 */
-	public final function getKeyName()
+	public final function getKeyName(): string
 	{
 		return $this->getScanResults()->getJoomlaExtensionName(true);
 	}
 
+	/** @inheritDoc */
+	public function setVerbose(bool $value): void
+	{
+		$this->verbose = $value;
+	}
+
+	/** @inheritDoc */
+	public function setDryRun(bool $value): void
+	{
+		$this->dryRun = $value;
+	}
 
 	/**
-	 * Get the root folder for the translation files in all languages. This is a directory in the root of the repository
-	 * called "translations". Inside it you have all language files using the following structure:
+	 * Find the XML manifest in an extension's directory and return the DOMDocument for it.
 	 *
-	 * component
-	 *      frontend
-	 *          en-GB, ...
-	 *      backend
-	 *          en-GB, ...
-	 * plugins
-	 *      somePluginFolder
-	 *          pluginName
-	 *              en-GB, ...
-	 *          otherPlugins...
-	 *      otherPluginFolders...
-	 * modules
-	 *      site
-	 *          frontendModuleName
-	 *              en-GB, ...
-	 *          otherFrontendModules,...
-	 *      admin
-	 *          frontendModuleName
-	 *              en-GB, ...
-	 *          otherFrontendModules,...
+	 * @param   string       $root           The folder to look into.
+	 * @param   string|null  $extensionType  The expected type of the extension, null to not perform this check.
 	 *
-	 * @param   string  $siteRoot  The site root to check for the translations root
-	 *
-	 * @return  string
+	 * @return  DOMDocument|null  The DOMDocument for the XML manifest or null if none was found.
 	 */
-	public static function getTranslationsRoot(string $siteRoot): string
+	protected function findXmlManifest(string $root, ?string $extensionType = null, ?string $forceFilename = null): ?DOMDocument
 	{
-		if (is_null(self::$translationsRoot))
+		if ($forceFilename)
 		{
-			self::$translationsRoot = '';
-			$possibleFolders        = ['translations', 'translation', 'languages', 'language', 'weblate', 'translate', 'strings'];
+			$this->xmlManifestPath = $root . '/' . $forceFilename;
+			$xmlDoc                = $this->loadAndTestManifest($this->xmlManifestPath, $extensionType);
+			$this->xmlManifestPath = ($xmlDoc === null) ? null : $this->xmlManifestPath;
 
-			foreach ($possibleFolders as $folder)
+			return $xmlDoc;
+		}
+
+		/** @var DirectoryIterator $fileInfo */
+		foreach (new DirectoryIterator($root) as $fileInfo)
+		{
+			if ($fileInfo->isDot() || !$fileInfo->isFile())
 			{
-				$path = $siteRoot . '/' . $folder;
+				continue;
+			}
 
-				if (is_dir($path))
+			if ($fileInfo->getExtension() != 'xml')
+			{
+				continue;
+			}
+
+			$xmlDoc = $this->loadAndTestManifest($fileInfo->getRealPath(), $extensionType);
+
+			if ($xmlDoc === null)
+			{
+				continue;
+			}
+
+			$this->xmlManifestPath = $fileInfo->getPathname();
+
+			return $xmlDoc;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Return the XML manifest for this extension
+	 *
+	 * @param   string|null  $forceFilename  Force an XML manifest filename to load (WITHOUT path).
+	 *
+	 * @return  DOMDocument|null
+	 */
+	protected function getXMLManifest(?string $forceFilename = null): ?DOMDocument
+	{
+		if (is_null($this->xmlManifest))
+		{
+			$this->xmlManifest = $this->findXmlManifest($this->extensionRoot, $this->manifestExtensionType, $forceFilename);
+		}
+
+		if (is_null($this->xmlManifest))
+		{
+			throw new RuntimeException("Cannot find manifest for extension in $this->extensionRoot // $this->manifestExtensionType");
+		}
+
+		return $this->xmlManifest;
+	}
+
+	/**
+	 * Scans a <language> node in the XML manifest and returns information about the languagess.
+	 *
+	 * @param   \DOMElement  $node  The node to scan
+	 *
+	 * @return  array
+	 */
+	protected final function scanLanguageNode(\DOMElement $node)
+	{
+		$folder = $this->extensionRoot;
+		$files  = [];
+
+		if ($node->hasAttribute('folder'))
+		{
+			$folder .= '/' . $node->getAttribute('folder');
+		}
+
+		if ($node->hasChildNodes())
+		{
+			foreach ($node->childNodes as $langFile)
+			{
+				if (!($langFile instanceof \DOMElement))
 				{
-					self::$translationsRoot = $path;
-
-					break;
+					continue;
 				}
+
+				$tag = $langFile->getAttribute('tag');
+
+				if (!isset($files[$tag]))
+				{
+					$files[$tag] = [];
+				}
+
+				$files[$tag][] = $folder . '/' . $langFile->textContent;
 			}
 		}
 
-		return self::$translationsRoot;
+		return [$folder, $files];
 	}
+
+	/**
+	 * Scan a folder for Joomla! INI language files. The folder must have the structure languageTag => files e.g.
+	 * en-GB/en-GB.com_foobar.ini
+	 * en-GB/en-GB.com_foobar.sys.ini
+	 * fr-FR/fr-FR.com_foobar.ini
+	 * fr-FR/fr-FR.com_foobar.sys.ini
+	 * ...
+	 *
+	 * The returned array is keyed on language, e.g.
+	 * [
+	 *   'en-GB' => ['/path/to/en-GB/en-GB.com_foobar.ini', '/path/to/en-GB/en-GB.com_foobar.sys.ini'],
+	 *   'fr-FR' => ['/path/to/fr-FR/fr-FR.com_foobar.ini', '/path/to/fr-FR/fr-FR.com_foobar.sys.ini'],
+	 *    ...
+	 * ]
+	 *
+	 * @param   string  $langPath  The path to scan
+	 *
+	 * @return  array  The discovered language files
+	 */
+	protected final function scanLanguageFolder(string $langPath): array
+	{
+		$ret = [];
+
+		// Make sure the folder exists
+		if (!is_dir($langPath))
+		{
+			return $ret;
+		}
+
+		// Iterate the outermost folders (language tags)
+		$langFolders = new DirectoryIterator($langPath);
+
+		foreach ($langFolders as $folder)
+		{
+			if (!$folder->isDir() || $folder->isDot())
+			{
+				continue;
+			}
+
+			$tag       = $folder->getFilename();
+			$ret[$tag] = [];
+
+			// Iterate the innermost files of each language folder (language files)
+			$langFiles = new DirectoryIterator($folder->getPathname());
+
+			foreach ($langFiles as $file)
+			{
+				if (!$file->isFile())
+				{
+					continue;
+				}
+
+				if ($file->getExtension() != 'ini')
+				{
+					continue;
+				}
+
+				$ret[$tag][] = $file->getRealPath();
+			}
+		}
+
+		return $ret;
+	}
+
+	/**
+	 * Get the absolute path of the extension's script file
+	 *
+	 * @param   ScanResult  $scan  The scanned extension
+	 *
+	 * @return  string|null  The absolute path of the script, null if there is no such thing.
+	 */
+	protected function getScriptAbsolutePath(ScanResult $scan): ?string
+	{
+		if (empty($scan->scriptFileName))
+		{
+			return null;
+		}
+
+		$possiblePaths = [
+			$this->extensionRoot . '/' . $scan->scriptFileName,
+			realpath($this->extensionRoot . '/../../component/' . $scan->scriptFileName),
+			realpath($this->extensionRoot . '/../component/' . $scan->scriptFileName),
+			realpath($this->extensionRoot . '/../../' . $scan->scriptFileName),
+			realpath($this->extensionRoot . '/../' . $scan->scriptFileName),
+		];
+
+		foreach ($possiblePaths as $path)
+		{
+			if (empty($path) || !file_exists($path) || !is_file($path))
+			{
+				continue;
+			}
+
+			return $path;
+		}
+
+		return null;
+	}
+
+	/**
+	 * Try to load an XML manifest and optionally verify it's the desired extension type
+	 *
+	 * @param   string       $pathname       The absolute filesystem path of the XML file to load
+	 * @param   string|null  $extensionType  The extension type to verify (optional)
+	 *
+	 * @return  DOMDocument|null  NULL if can't load XML file, isn't a manifest or doesn't match $extensionType
+	 */
+	private function loadAndTestManifest(string $pathname, ?string $extensionType = null): ?DOMDocument
+	{
+		$xmlDoc = new DOMDocument();
+		$xmlDoc->load($pathname, LIBXML_NOBLANKS | LIBXML_NOCDATA | LIBXML_NOENT | LIBXML_NONET);
+
+		$rootNodes = $xmlDoc->getElementsByTagname('extension');
+
+		if ($rootNodes->length < 1)
+		{
+			unset($xmlDoc);
+
+			return null;
+		}
+
+		$root = $rootNodes->item(0);
+
+		if (!$root->hasAttributes())
+		{
+			unset($xmlDoc);
+
+			return null;
+		}
+
+		if (!empty($extensionType) && ($root->getAttribute('type') != $extensionType))
+		{
+			unset($xmlDoc);
+
+			return null;
+		}
+
+		return $xmlDoc;
+	}
+
+
 }

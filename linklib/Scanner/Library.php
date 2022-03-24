@@ -161,11 +161,20 @@ class Library extends AbstractScanner
 		$scan = $this->getScanResults();
 		$result = parent::map();
 
+		// Map the library itself
 		$dirs = [
 			$scan->libraryFolder => $this->siteRoot . '/libraries/' . $scan->extension,
 		];
 
 		$result->dirs = array_merge($result->dirs, $dirs);
+
+		// Map XML manifest
+		if (!empty($this->xmlManifestPath))
+		{
+			$manifestFrom  = $this->extensionRoot . '/' . $this->xmlManifestPath;
+			$manifestTo    = $this->siteRoot . '/manifests/libraries/' . $this->xmlManifestPath;
+			$result->files = array_merge($result->files, [$manifestFrom => $manifestTo]);
+		}
 
 		return $result;
 	}
@@ -214,7 +223,7 @@ class Library extends AbstractScanner
 			}
 
 			// Get the extension ScannerInterface object
-			$extension    = new Library($folder->getRealPath(), $translationsRoot);
+			$extension    = new Library($folder->getRealPath(), $languageRoot);
 			$extensions[] = $extension;
 		}
 

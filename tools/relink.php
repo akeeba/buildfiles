@@ -20,7 +20,7 @@ function showUsage()
 	echo <<<ENDUSAGE
 
 Usage:
-	php $file /path/to/site /path/to/repository
+	php $file /path/to/site /path/to/repository [--dry-run] [--silent]
 
 ENDUSAGE;
 }
@@ -50,6 +50,32 @@ if (!class_exists('Akeeba\\LinkLibrary\\Relink'))
 $siteRoot = $argv[1];
 $repoRoot = $argv[2];
 
-$relink = new \Akeeba\LinkLibrary\Relink($repoRoot);
-$relink->setVerbose(true);
-$relink->relink($siteRoot);
+$dryRun = in_array('--dry-run', $argv);
+$silent = in_array('--silent', $argv);
+
+if (!$silent)
+{
+	error_reporting(E_ALL);
+	ini_set('display_errors', true);
+}
+
+try
+{
+	$relink = new \Akeeba\LinkLibrary\Relink($repoRoot);
+	$relink->setVerbose(!$silent);
+	$relink->setDryRun($dryRun);
+	$relink->relink($siteRoot);
+}
+catch (Throwable $e)
+{
+	echo <<< TEXT
+
+ERROR
+===============================================================================
+{$e->getMessage()}
+#0 {$e->getFile()}({$e->getLine()})
+{$e->getTraceAsString()}
+
+TEXT;
+
+}

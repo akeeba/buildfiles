@@ -236,7 +236,7 @@ class Module extends AbstractScanner
 				}
 
 				// Get the extension ScannerInterface object
-				$extension    = new Module($folder->getRealPath(), $translationsRoot);
+				$extension    = new Module($folder->getRealPath(), $languageRoot);
 				$extensions[] = $extension;
 			}
 		}
