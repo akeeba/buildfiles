@@ -218,7 +218,7 @@ class Package extends AbstractScanner
 		if (!empty($this->xmlManifestPath))
 		{
 			$result->files = array_merge($result->files, [
-				$this->xmlManifestPath => $this->siteRoot . '/manifests/packages/' . $scan->getJoomlaExtensionName() . '.xml'
+				$this->xmlManifestPath => $this->siteRoot . '/administrator/manifests/packages/' . $scan->getJoomlaExtensionName() . '.xml'
 			]);
 		}
 
@@ -226,7 +226,7 @@ class Package extends AbstractScanner
 		if ($scriptPath = $this->getScriptAbsolutePath($scan))
 		{
 			$result->files = array_merge($result->files, [
-				$scriptPath => $this->siteRoot . '/manifests/packages/' . $scan->getJoomlaExtensionName() . '/' . basename($scriptPath),
+				$scriptPath => $this->siteRoot . '/administrator/manifests/packages/' . $scan->getJoomlaExtensionName() . '/' . basename($scriptPath),
 			]);
 		}
 

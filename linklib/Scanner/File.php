@@ -219,7 +219,7 @@ class File extends AbstractScanner
 		if (!empty($this->xmlManifestPath))
 		{
 			$result->files = array_merge($result->files, [
-				$this->xmlManifestPath => $this->siteRoot . '/manifests/files/' . basename($this->xmlManifestPath),
+				$this->xmlManifestPath => $this->siteRoot . '/administrator/manifests/files/' . basename($this->xmlManifestPath),
 			]);
 		}
 
@@ -227,7 +227,7 @@ class File extends AbstractScanner
 		if ($scriptPath = $this->getScriptAbsolutePath($scan))
 		{
 			$result->files = array_merge($result->files, [
-				$scriptPath => $this->siteRoot . '/manifests/files/' . $scan->extensionType . '/' . basename($scriptPath),
+				$scriptPath => $this->siteRoot . '/administrator/manifests/files/' . $scan->extensionType . '/' . basename($scriptPath),
 			]);
 		}
 

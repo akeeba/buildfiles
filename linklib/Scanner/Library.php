@@ -172,7 +172,7 @@ class Library extends AbstractScanner
 		if (!empty($this->xmlManifestPath))
 		{
 			$manifestFrom  = $this->extensionRoot . '/' . $this->xmlManifestPath;
-			$manifestTo    = $this->siteRoot . '/manifests/libraries/' . $this->xmlManifestPath;
+			$manifestTo    = $this->siteRoot . '/administrator/manifests/libraries/' . $this->xmlManifestPath;
 			$result->files = array_merge($result->files, [$manifestFrom => $manifestTo]);
 		}
 

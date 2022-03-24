@@ -114,6 +114,7 @@ class Relink
 
 			$extension->setSiteRoot($siteRoot);
 			$extension->setVerbose($this->dryRun && $this->verbose);
+			$extension->setVerbose($this->verbose);
 			$extension->setDryRun($this->dryRun);
 			$extension->relink();
 		}
