@@ -23,21 +23,6 @@ abstract class LinkHelper
 	private static $isWindows = null;
 
 	/**
-	 * Detects whether we are running under Microsoft Windows
-	 *
-	 * @return  bool
-	 */
-	private static function isWindows(): bool
-	{
-		if (is_null(self::$isWindows))
-		{
-			self::$isWindows = substr(PHP_OS, 0, 3) == 'WIN';
-		}
-
-		return self::$isWindows;
-	}
-
-	/**
 	 * Normalize Windows or mixed Windows and UNIX paths to UNIX style
 	 *
 	 * @param   string  $path  The path to normalize
@@ -46,7 +31,7 @@ abstract class LinkHelper
 	 */
 	public static function TranslateWinPath(string $path): string
 	{
-		/** @var  bool  $is_unc  Is this a UNC (network share) path? */
+		/** @var  bool $is_unc Is this a UNC (network share) path? */
 		$is_unc = false;
 
 		if (self::isWindows())
@@ -164,8 +149,8 @@ abstract class LinkHelper
 				 * nested symlinks work with IIS is using absolute paths for the link targets.
 				 */
 				// $relativeFrom = self::getRelativePath($realTo, $realFrom);
-				$cmd          = 'cmd /c mklink ' . $extraArguments . ' "' . $realTo . '" "' . $realFrom . '"';
-				$res          = exec($cmd);
+				$cmd = 'cmd /c mklink ' . $extraArguments . ' "' . $realTo . '" "' . $realFrom . '"';
+				$res = exec($cmd);
 			}
 			else
 			{
@@ -178,7 +163,7 @@ abstract class LinkHelper
 			$res = @link($realFrom, $realTo);
 		}
 
-		if (!$res)
+		if (!$res && !self::isVirtualised())
 		{
 			if ($type == 'symlink')
 			{
@@ -286,7 +271,7 @@ abstract class LinkHelper
 					$deleteFileResult = @unlink($pathname);
 				}
 
-				$return           = $return && $deleteFileResult;
+				$return = $return && $deleteFileResult;
 
 				if (!$deleteFileResult)
 				{
@@ -322,13 +307,13 @@ abstract class LinkHelper
 		// Windows: convert drive letter to uppercase
 		if (self::isWindows())
 		{
-			list($pathToConvert, $basePath) = array_map(function ($path) {
+			[$pathToConvert, $basePath] = array_map(function ($path) {
 				if (strpos($path, ':') === false)
 				{
 					return $path;
 				}
 
-				list($drive, $path) = explode(':', $path, 2);
+				[$drive, $path] = explode(':', $path, 2);
 				$drive = strtoupper($drive);
 
 				return $drive . ':' . $path;
@@ -393,7 +378,7 @@ abstract class LinkHelper
 
 		if ($isWindows)
 		{
-			$target   = self::TranslateWinPath($target);
+			$target = self::TranslateWinPath($target);
 		}
 
 		// Windows can't unlink() directory symlinks; it needs rmdir() to be used instead
@@ -469,5 +454,90 @@ abstract class LinkHelper
 		}
 
 		return $path . '/' . $folder;
+	}
+
+	/**
+	 * Detects whether we are running under Microsoft Windows
+	 *
+	 * @return  bool
+	 */
+	private static function isWindows(): bool
+	{
+		if (is_null(self::$isWindows))
+		{
+			self::$isWindows = substr(PHP_OS, 0, 3) == 'WIN';
+		}
+
+		return self::$isWindows;
+	}
+
+	/**
+	 * Detects whether we are running inside a virtual machine.
+	 *
+	 * The thinking is that in this case we are probably in a host folder shared with the VM which means symlinking WILL
+	 * fail but we should suck it up instead of throwing an exception.
+	 *
+	 * @return  bool
+	 * @see     https://github.com/ansible/ansible/blob/devel/lib/ansible/module_utils/facts/virtual/linux.py
+	 */
+	private static function isVirtualised(): bool
+	{
+		// I can only detect virtualization on Linux.
+		if (PHP_OS_FAMILY !== 'Linux')
+		{
+			return false;
+		}
+
+		if (@file_exists('/proc/vz') && @file_exists('/proc/lve') && !@file_exists('/proc_bc'))
+		{
+			return true;
+		}
+
+		$systemd_container = file_get_contents('/run/systemd/container');
+
+		if ($systemd_container !== false)
+		{
+			return true;
+		}
+
+		$lines = file('/proc/xen');
+
+		if ($lines !== false)
+		{
+			$isHost = array_reduce($lines, function (bool $carry, string $line) {
+				return $carry || (strpos($line, 'control_d') !== false);
+			}, false);
+
+			if (!$isHost)
+			{
+				return true;
+			}
+		}
+
+		$productName = @file_get_contents('/sys/devices/virtual/dmi/id_product_name') ?: '';
+		$biosVendor  = @file_get_contents('/sys/devices/virtual/dmi/id/bios_vendor') ?: '';
+
+		foreach ([
+			         'KVM', 'KVM Server', 'Bochs', 'AHV', 'oVirt', 'RHV', 'RHEV', 'OpenStack Compute', 'OpenStack Nova',
+			         'VirtualBox', 'VMware',
+		         ] as $search)
+		{
+			if (stripos($productName, $search) !== false)
+			{
+				return true;
+			}
+		}
+
+		foreach ([
+			         'Xen', 'innotek GmbH', 'Microsoft Corporation', 'Parallels Software', 'OpenStack Foundation',
+		         ] as $search)
+		{
+			if (stripos($biosVendor, $search) !== false)
+			{
+				return true;
+			}
+		}
+
+		return false;
 	}
 }
