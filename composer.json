@@ -5,12 +5,6 @@
   "minimum-stability": "beta",
   "require": {
     "php": ">=7.3 <8.1",
-    "ext-curl": "*",
-    "ext-xsl": "*",
-    "ext-zlib": "*",
-    "ext-dom": "*",
-    "ext-zip": "*",
-    "ext-libxml": "*",
     "php-http/guzzle6-adapter": "^2.0",
     "nyholm/psr7": "^1.0",
     "knplabs/github-api": "^3.0",
@@ -21,6 +15,13 @@
     "rector/rector": "^0.10"
   },
   "suggest": {
-    "ext-ssh2": "*"
+    "ext-ssh2": "*",
+    "ext-simplexml": "*",
+    "ext-curl": "*",
+    "ext-xsl": "*",
+    "ext-zlib": "*",
+    "ext-dom": "*",
+    "ext-zip": "*",
+    "ext-libxml": "*"
   }
 }
