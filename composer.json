@@ -9,7 +9,7 @@
     "nyholm/psr7": "^1.0",
     "knplabs/github-api": "^3.0",
     "corneltek/getoptionkit": "^2.6.0",
-    "czproject/git-php": "^3.10.0",
+    "czproject/git-php": "^4.0.3",
     "akeeba/s3": "dev-development",
     "composer/ca-bundle": "^1.2",
     "rector/rector": "^0.10"
