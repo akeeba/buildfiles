@@ -75,7 +75,7 @@ do
 	case "$1" in
 		pull )
 			echo -e "\n"$COLOR_LIGHT_BLUE"Pulling $COLOR_CYAN$d"$COLOR_NC
-			git pull --all -p
+			git pull --all -p -t --jobs=4
 			;;
 
 		push )
