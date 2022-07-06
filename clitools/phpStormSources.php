@@ -174,6 +174,12 @@ function getNamespaces(string $type, string $folder): array
 								'/components/' . $name . '/',
 								$namespacePath
 							);
+
+							$apiPath = str_replace(
+								'/administrator/components/' . $name . '/',
+								'/api/components/' . $name . '/',
+								$namespacePath
+							);
 						}
 						else
 						{
@@ -182,8 +188,15 @@ function getNamespaces(string $type, string $folder): array
 								'/components/frontend/',
 								$namespacePath
 							);
+
+							$apiPath = str_replace(
+								'/component/backend/',
+								'/components/api/',
+								$namespacePath
+							);
 						}
 
+						$extensions[$namespace . 'Api\\']           = $apiPath;
 						$extensions[$namespace . 'Site\\']          = $sitePath;
 						$extensions[$namespace . 'Administrator\\'] = $namespacePath;
 						break;
