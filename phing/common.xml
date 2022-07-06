@@ -59,28 +59,29 @@
     <!-- Custom task definitions -->
     <includepath classpath="${phing.dir.common}" />
 
-    <taskdef name="gitdate" classname="tasks.GitDateTask" />
-    <taskdef name="GitHubAsset" classname="tasks.GitHubAssetTask" />
-    <taskdef name="GitHubRelease" classname="tasks.GitHubReleaseTask" />
-    <taskdef name="gitversion" classname="tasks.GitVersionTask" />
-    <taskdef name="autoversion" classname="tasks.AutoVersionTask" />
-    <taskdef name="jpa" classname="tasks.JPATask" />
-    <taskdef name="link" classname="tasks.LinkTask" />
-    <taskdef name="projectlink" classname="tasks.ProjectLinkTask" />
-    <taskdef name="relinksite" classname="tasks.RelinkSiteTask" />
-    <taskdef name="relinkwp" classname="tasks.RelinkWPSiteTask" />
-    <taskdef name="zipme" classname="tasks.ZipmeTask" />
-    <taskdef name="docbook2fo" classname="tasks.DocBookToFoTask" />
-    <taskdef name="docbook2epub" classname="tasks.DocBookToEpubTask" />
-	<!-- See https://github.com/rchouinard/phing-tasks/blob/master/classes/rych/tasks/YuiCompressorTask.php -->
-    <taskdef name="yuicompressor" classname="tasks.YuiCompressorTask" />
-    <taskdef name="closure" classname="tasks.ClosureTask" />
-    <taskdef name="bladejoomla" classname="tasks.BladeJoomlaTask" />
-    <taskdef name="bladeawf" classname="tasks.BladeAwfTask" />
-    <taskdef name="curlsftp" classname="tasks.CurlSftpTask" />
 	<taskdef name="svnadd" classname="tasks.SvnaddTask"/>
 	<taskdef name="svnremove" classname="tasks.SvnremoveTask"/>
 	<taskdef name="xmlversion" classname="tasks.XmlVersionTask"/>
+    <taskdef name="GitHubAsset" classname="tasks.GitHubAssetTask" />
+    <taskdef name="GitHubRelease" classname="tasks.GitHubReleaseTask" />
+    <taskdef name="autoversion" classname="tasks.AutoVersionTask" />
+    <taskdef name="bladeawf" classname="tasks.BladeAwfTask" />
+    <taskdef name="bladejoomla" classname="tasks.BladeJoomlaTask" />
+    <taskdef name="closure" classname="tasks.ClosureTask" />
+    <taskdef name="curlsftp" classname="tasks.CurlSftpTask" />
+    <taskdef name="docbook2epub" classname="tasks.DocBookToEpubTask" />
+    <taskdef name="docbook2fo" classname="tasks.DocBookToFoTask" />
+    <taskdef name="gitdate" classname="tasks.GitDateTask" />
+    <taskdef name="gitversion" classname="tasks.GitVersionTask" />
+    <taskdef name="jpa" classname="tasks.JPATask" />
+    <taskdef name="link" classname="tasks.LinkTask" />
+    <taskdef name="phpstormsources" classname="tasks.PhpStormSources" />
+    <taskdef name="projectlink" classname="tasks.ProjectLinkTask" />
+    <taskdef name="relinksite" classname="tasks.RelinkSiteTask" />
+    <taskdef name="relinkwp" classname="tasks.RelinkWPSiteTask" />
+	<!-- See https://github.com/rchouinard/phing-tasks/blob/master/classes/rych/tasks/YuiCompressorTask.php -->
+	<taskdef name="yuicompressor" classname="tasks.YuiCompressorTask" />
+    <taskdef name="zipme" classname="tasks.ZipmeTask" />
 
 	<!--
 	Generate the installation packages and the documentation
@@ -1680,4 +1681,8 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
         <echo message="phing.project.name ${phing.project.name}" />
         <echo message="project.basedir ${project.basedir}" />
     </target>
+
+	<target name="phpstorm" description="Update PhpStorm's directory to namespace mapping">
+		<phpstormsources repository="${dirs.root}" />
+	</target>
 </project>
