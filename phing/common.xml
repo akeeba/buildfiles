@@ -62,6 +62,7 @@
 	<taskdef name="svnadd" classname="tasks.SvnaddTask"/>
 	<taskdef name="svnremove" classname="tasks.SvnremoveTask"/>
 	<taskdef name="xmlversion" classname="tasks.XmlVersionTask"/>
+	<taskdef name="wordpressentrypoint" classname="tasks.WordPressEntryPointTask"/>
     <taskdef name="GitHubAsset" classname="tasks.GitHubAssetTask" />
     <taskdef name="GitHubRelease" classname="tasks.GitHubReleaseTask" />
     <taskdef name="autoversion" classname="tasks.AutoVersionTask" />
