@@ -5,24 +5,24 @@
 # @license   GNU General Public License version 3, or later
 #
 
-usage () {
-	echo -e $COLOR_BROWN"Usage: %0 <command>"$COLOR_NC
-	echo ""
-	echo -e $COLOR_BLUE"All repositories"$COLOR_NC
-	echo "pull	  Pull from Git"
-	echo "push	  Push to Git"
-	echo "tidy	  Perform local Git repo housekeeping"
-	echo "status  Report repositories with uncommitted changes"
-	echo "branch  Which branch am I in?"
-	echo "cloneme Generate git clone commands"
-	echo "version Latest version versus latest tag information"
-	echo -e $COLOR_BLUE"Using Akeeba Build Files"$COLOR_NC
-	echo "build   Run the Phing 'git' task to rebuild the software"
-	echo "link    Internal relink"
-	echo "relink  Relink to a site, e.g. %0 relink /var/www/mysite"
-	echo "update  Push updates to the CDN (uses Akeeba Release Maker)"
+usage() {
+  echo -e $COLOR_BROWN"Usage: %0 <command>"$COLOR_NC
+  echo ""
+  echo -e $COLOR_BLUE"All repositories"$COLOR_NC
+  echo "pull	  Pull from Git"
+  echo "push	  Push to Git"
+  echo "tidy	  Perform local Git repo housekeeping"
+  echo "status  Report repositories with uncommitted changes"
+  echo "branch  Which branch am I in?"
+  echo "cloneme Generate git clone commands"
+  echo "version Latest version versus latest tag information"
+  echo -e $COLOR_BLUE"Using Akeeba Build Files"$COLOR_NC
+  echo "build   Run the Phing 'git' task to rebuild the software"
+  echo "link    Internal relink"
+  echo "relink  Relink to a site, e.g. %0 relink /var/www/mysite"
+  echo "update  Push updates to the CDN (uses Akeeba Release Maker)"
 
-	exit 255
+  exit 255
 }
 
 COLOR_NC='\033[0m'
@@ -43,145 +43,148 @@ COLOR_YELLOW='\033[1;33m'
 COLOR_GRAY='\033[0;30m'
 COLOR_LIGHT_GRAY='\033[0;37m'
 
-if [ $# -lt 1 ]
-then
-	usage
+if [ $# -lt 1 ]; then
+  usage
 
-	exit 255
+  exit 255
 fi
 
 echo -e $COLOR_WHITE"All – Loop all Git repositories"$COLOR_NC
 echo ""
 
-for d in */
-do
-	pushd $d > /dev/null
+for d in */; do
+  pushd $d >/dev/null
 
-	if [ ! -d ".git" ]
-	then
-		popd > /dev/null
+  if [ ! -d ".git" ]; then
+    popd >/dev/null
 
-		continue
-	fi
+    continue
+  fi
 
-	THISREPO_LINES=`git remote -v | grep git@github.com | wc -l | awk '{print $1}'`
+  THISREPO_LINES=$(git remote -v | grep git@github.com | wc -l | awk '{print $1}')
 
-	if [ $THISREPO_LINES -lt 1 ]
-	then
-		popd > /dev/null
+  if [ $THISREPO_LINES -lt 1 ]; then
+    popd >/dev/null
 
-		continue
-	fi
+    continue
+  fi
 
-	case "$1" in
-		pull )
-			echo -e "\n"$COLOR_LIGHT_BLUE"Pulling $COLOR_CYAN$d"$COLOR_NC
-			git pull --all -p -t --jobs=4
-			;;
+  case "$1" in
+  pull)
+    echo -e "\n"$COLOR_LIGHT_BLUE"Pulling $COLOR_CYAN$d"$COLOR_NC
+    git pull --all -p -t --jobs=4
+    ;;
 
-		push )
-			echo -e "\n"$COLOR_LIGHT_GREEN"Pushing $COLOR_CYAN$d"$COLOR_NC
-			git push
-			git push --tags
-			;;
+  push)
+    echo -e "\n"$COLOR_LIGHT_GREEN"Pushing $COLOR_CYAN$d"$COLOR_NC
+    git push
+    git push --tags
+    ;;
 
-		tidy )
-			echo -e "\n"$COLOR_RED"Housekeeping $COLOR_CYAN$d"$COLOR_NC
-			git remote prune origin
-			git gc
-			;;
+  tidy)
+    echo -e "\n"$COLOR_RED"Housekeeping $COLOR_CYAN$d"$COLOR_NC
+    git remote prune origin
+    git gc
+    ;;
 
-    cloneme )
-      ZZZ_CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
-      ZZZ_REMOTE=`git config --get remote.origin.url`
+  cloneme)
+    ZZZ_CUR_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    ZZZ_REMOTE=$(git config --get remote.origin.url)
 
-      echo git clone -b $ZZZ_CUR_BRANCH "$ZZZ_REMOTE" $d
-      ;;
+    echo git clone -b $ZZZ_CUR_BRANCH "$ZZZ_REMOTE" $d
+    ;;
 
-    branch )
-      ZZZ_CUR_BRANCH=`git rev-parse --abbrev-ref HEAD`
-      ZZZ_COLOR=$COLOR_LIGHT_RED
+  branch)
+    ZZZ_CUR_BRANCH=$(git rev-parse --abbrev-ref HEAD)
+    ZZZ_COLOR=$COLOR_LIGHT_RED
 
-			if [[ "$ZZZ_CUR_BRANCH" == "development" ]]
-			then
-          ZZZ_COLOR=$COLOR_LIGHT_GREEN
-      elif [[ "$ZZZ_CUR_BRANCH" == "master" ]]
-      then
-          ZZZ_COLOR=$COLOR_YELLOW
-      elif [[ "$ZZZ_CUR_BRANCH" == "main" ]]
-      then
-          ZZZ_COLOR=$COLOR_YELLOW
-      elif [[ "$ZZZ_CUR_BRANCH" == "kyrion" ]]
-      then
-          ZZZ_COLOR=$COLOR_YELLOW
-      fi
+    if [[ "$ZZZ_CUR_BRANCH" == "development" ]]; then
+      ZZZ_COLOR=$COLOR_LIGHT_GREEN
+    elif [[ "$ZZZ_CUR_BRANCH" == "master" ]]; then
+      ZZZ_COLOR=$COLOR_YELLOW
+    elif [[ "$ZZZ_CUR_BRANCH" == "main" ]]; then
+      ZZZ_COLOR=$COLOR_YELLOW
+    elif [[ "$ZZZ_CUR_BRANCH" == "kyrion" ]]; then
+      ZZZ_COLOR=$COLOR_YELLOW
+    fi
 
-      echo -ne $COLOR_LIGHT_PURPLE"Branch "$COLOR_CYAN
-      printf '%-25s' $d
-			echo -e $ZZZ_COLOR$ZZZ_CUR_BRANCH$COLOR_NC
-			;;
+    echo -ne $COLOR_LIGHT_PURPLE"Branch "$COLOR_CYAN
+    printf '%-25s' $d
+    echo -e $ZZZ_COLOR$ZZZ_CUR_BRANCH$COLOR_NC
+    ;;
 
-    status )
-      #i=`expr $(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l)`
-      i=`expr $(git status --porcelain 2>/dev/null| wc -l)`
-      if [ $i -ne 0 ]
-      then
-        echo -e $COLOR_LIGHT_RED"Dirty $COLOR_CYAN$d"$COLOR_NC
-      fi
-      ;;
-			
-		link )
-			if [ -d build ]
-			then
-				echo -e "\n"$COLOR_BROWN"Linking $COLOR_CYAN$d"$COLOR_NC
-				cd build
-				phing link
-			fi
-			;;
+  status)
+    #i=`expr $(git status --porcelain 2>/dev/null| egrep "^(M| M)" | wc -l)`
+    i=$(expr $(git status --porcelain 2>/dev/null | wc -l))
+    if [ $i -ne 0 ]; then
+      echo -e $COLOR_LIGHT_RED"Dirty $COLOR_CYAN$d"$COLOR_NC
+    fi
+    ;;
 
-		build )
-			if [ -d build ]
-			then
-				echo -e "\n"$COLOR_BROWN"Building $COLOR_CYAN$d"$COLOR_NC
-				cd build
-				phing git
-			fi
-			;;
+  link)
+    if [ -d build ]; then
+      echo -e "\n"$COLOR_BROWN"Linking $COLOR_CYAN$d"$COLOR_NC
+      cd build
+      phing link
+    fi
+    ;;
 
-		relink )
-			if [ -d build ]
-			then
-				echo -e "\n"$COLOR_BROWN"Relinking $COLOR_CYAN$d"$COLOR_NC
-				cd build
-				phing relink -Dsite=$2
-			fi
-			;;
+  build)
+    if [ -d build ]; then
+      echo -e "\n"$COLOR_BROWN"Building $COLOR_CYAN$d"$COLOR_NC
+      cd build
+      phing git
+    fi
+    ;;
 
-		update )
-			if [ -d build ]
-			then
-				echo -e "\n"$COLOR_BROWN"Pushing updates for $COLOR_CYAN$d"$COLOR_NC
-				cd build
-				phing update
-			fi
-			;;
+  relink)
+    if [ -d build ]; then
+      echo -e "\n"$COLOR_BROWN"Relinking $COLOR_CYAN$d"$COLOR_NC
+      cd build
+      phing relink -Dsite=$2
+    fi
+    ;;
 
-	  version )
-	    LATEST_TAG=$(git describe --abbrev=0)
-	    echo -e "\n"$COLOR_BROWN"Version information for $COLOR_CYAN$d"$COLOR_NC
-	    [ -f CHANGELOG ] && head -n2 CHANGELOG
-	    [ -f CHANGELOG.md ] && head -n2 CHANGELOG.md
-	    echo -e $COLOR_LIGHT_PURPLE"Latest tag: $LATEST_TAG"
-	    ;;
+  update)
+    if [ -d build ]; then
+      echo -e "\n"$COLOR_BROWN"Pushing updates for $COLOR_CYAN$d"$COLOR_NC
+      cd build
+      phing update
+    fi
+    ;;
 
-		* )
-			echo Unknown command "$1"
+  version)
+    if [[ (! -f CHANGELOG.md) && (! -f CHANGELOG) ]]; then
+      popd >/dev/null
+      continue
+    fi
+    if [ -f CHANGELOG ]; then
+      CHANGELOG_FILE=CHANGELOG
+    else
+      CHANGELOG_FILE=CHANGELOG.md
+    fi
+    LATEST_VERSION=$(grep -o "[[:blank:]]\([0-9]\{1,\}\.\)\{2\}\d\{1,\}" $CHANGELOG_FILE | head -n 1)
+    LATEST_VERSION=$(echo $LATEST_VERSION | sed -e 's/^[[:space:]]*//')
+    LATEST_TAG=$(git describe --abbrev=0 --always)
 
-			popd > /dev/null
+    if [[ "$LATEST_VERSION" != "$LATEST_TAG" ]]
+    then
+      echo -en "${COLOR_LIGHT_RED}Unreleased $COLOR_CYAN$d$COLOR_NC "
+      echo -e "${COLOR_LIGHT_RED}$LATEST_VERSION$COLOR_NC ($COLOR_BROWN$LATEST_TAG$COLOR_NC)"
+    else
+      echo -en "${COLOR_LIGHT_GREEN}Released   $COLOR_CYAN$d$COLOR_NC "
+      echo -e "$COLOR_BROWN$LATEST_TAG$COLOR_NC"
+    fi
+    ;;
 
-			exit
-			;;
-	esac
+  *)
+    echo Unknown command "$1"
 
-	popd > /dev/null
+    popd >/dev/null
+
+    exit
+    ;;
+  esac
+
+  popd >/dev/null
 done
