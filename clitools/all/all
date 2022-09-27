@@ -15,6 +15,7 @@ usage () {
 	echo "status  Report repositories with uncommitted changes"
 	echo "branch  Which branch am I in?"
 	echo "cloneme Generate git clone commands"
+	echo "version Latest version versus latest tag information"
 	echo -e $COLOR_BLUE"Using Akeeba Build Files"$COLOR_NC
 	echo "build   Run the Phing 'git' task to rebuild the software"
 	echo "link    Internal relink"
@@ -164,6 +165,14 @@ do
 				phing update
 			fi
 			;;
+
+	  version )
+	    LATEST_TAG=$(git describe --abbrev=0)
+	    echo -e "\n"$COLOR_BROWN"Version information for $COLOR_CYAN$d"$COLOR_NC
+	    [ -f CHANGELOG ] && head -n2 CHANGELOG
+	    [ -f CHANGELOG.md ] && head -n2 CHANGELOG.md
+	    echo -e $COLOR_LIGHT_PURPLE"Latest tag: $LATEST_TAG"
+	    ;;
 
 		* )
 			echo Unknown command "$1"
