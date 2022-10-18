@@ -243,7 +243,7 @@
         <mkdir dir="${docs.epubdir}/OEBPS" />
         <mkdir dir="${docs.epubdir}/META-INF" />
         <mkdir dir="${docs.epubdir}/OEBPS/images" />
-        <copy todir="${docs.epubdir}/OEBPS/images">
+        <copy todir="${docs.epubdir}/OEBPS/images" haltonerror="false">
             <fileset dir="${docs.images}/images">
                 <include name="*.png" />
                 <include name="*.jpg" />
