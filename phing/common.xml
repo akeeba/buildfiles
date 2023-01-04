@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!--
   ~ @package   buildfiles
-  ~ @copyright Copyright (c)2010-2021 Nicholas K. Dionysopoulos / Akeeba Ltd
+  ~ @copyright Copyright (c)2010-2023 Nicholas K. Dionysopoulos / Akeeba Ltd
   ~ @license   GNU General Public License version 3, or later
   -->
 <project name="common" basedir="." description="Common phing tasks for building Joomla! extensions"
@@ -1555,7 +1555,7 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 			<then>
 				<!-- No Pro/Core version, do not use a suffix -->
 				<!-- XML Manifest name: pkg_something.xml -->
-				<property name="build.template_xml" value="pkg_${build.component}.xml" />
+				<property name="build.template_xml" value="pkg_${build.package_base_name}.xml" />
 				<!-- Package name: pkg_something-1.2.3.zip -->
 				<property name="build.package_name" value="pkg_${build.package_base_name}-${version}.zip" />
 				<!-- Fileset reference ID: package -->
@@ -1573,7 +1573,7 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 					</else>
 				</if>
 				<!-- XML Manifest name: pkg_something_core.xml -->
-				<property name="build.template_xml" value="pkg_${build.component}_${build.suffix}.xml" />
+				<property name="build.template_xml" value="pkg_${build.package_base_name}_${build.suffix}.xml" />
 				<!-- Package name: pkg_something-1.2.3-core.zip -->
 				<property name="build.package_name" value="pkg_${build.package_base_name}-${version}-${build.suffix}.zip" />
 				<!-- Fileset reference ID: package-core -->
