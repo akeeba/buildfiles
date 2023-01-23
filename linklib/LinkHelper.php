@@ -106,7 +106,7 @@ abstract class LinkHelper
 		// If the target already exists we need to remove it first
 		if (is_file($realTo) || is_dir($realTo) || is_link($realTo) || file_exists($realTo))
 		{
-			$res = self::unlink($realTo, true);
+			$res = self::unlink($realTo);
 
 			if (!$res)
 			{
@@ -218,80 +218,29 @@ abstract class LinkHelper
 	 * Recursively delete a directory
 	 *
 	 * @param   string  $dir             The directory to remove
-	 * @param   bool    $throwException  Should I thow an exception if I can't delete something?
 	 *
 	 * @return  bool  True on success
 	 * @throws \Exception  If I can't delete something and $throwException is true
 	 */
-	public static function recursiveUnlink(string $dir, bool $throwException = false): bool
+	public static function recursiveUnlink(string $dir): bool
 	{
 		$return = true;
 
-		try
+		$dh = new \DirectoryIterator($dir);
+
+		foreach ($dh as $file)
 		{
-			$dh = new \DirectoryIterator($dir);
-
-			foreach ($dh as $file)
+			if ($file->isDot())
 			{
-				if ($file->isDot())
-				{
-					continue;
-				}
-
-				$pathname = $file->getPathname();
-
-				if ($file->isDir())
-				{
-					// We have to try the rmdir in case this is a Windows directory symlink OR an empty folder.
-					$deleteFolderResult = @rmdir($pathname);
-
-					// If rmdir failed (non-empty, real folder) we have to recursively delete it
-					if (!$deleteFolderResult)
-					{
-						$deleteFolderResult = self::recursiveUnlink($pathname, true);
-						$return             = $return && $deleteFolderResult;
-					}
-
-					if (!$deleteFolderResult)
-					{
-						throw new \RuntimeException("Failed deleting folder {$pathname}");
-					}
-				}
-
-				if (!file_exists($pathname) && !is_dir($pathname))
-				{
-					continue;
-				}
-
-				// We have to try the rmdir in case this is a Windows directory symlink.
-				$deleteFileResult = @rmdir($pathname);
-
-				if (!$deleteFileResult)
-				{
-					$deleteFileResult = @unlink($pathname);
-				}
-
-				$return = $return && $deleteFileResult;
-
-				if (!$deleteFileResult)
-				{
-					throw new \RuntimeException("Failed deleting file {$pathname}");
-				}
+				continue;
 			}
 
-			$return = $return && @rmdir($dir);
-
-			return $return;
+			$return = $return && self::unlink($file->getPathname());
 		}
-		catch (\Exception $e)
-		{
-			if ($throwException)
-			{
-				throw $e;
-			}
 
-			return false;
-		}
+		$return = $return && @rmdir($dir);
+
+		return $return;
 	}
 
 	/**
@@ -367,12 +316,11 @@ abstract class LinkHelper
 	 * Finally, if the target is a real directory it will be deleted recursively.
 	 *
 	 * @param   string  $target  The target link / file / folder to delete.
-	 * @param   bool    $throw   Throw exception on failed deletion?
 	 *
 	 * @return  bool  True on success
 	 * @throws \Exception
 	 */
-	public static function unlink(string $target, bool $throw = false): bool
+	public static function unlink(string $target): bool
 	{
 		$isWindows = self::isWindows();
 
@@ -381,29 +329,20 @@ abstract class LinkHelper
 			$target = self::TranslateWinPath($target);
 		}
 
-		// Windows can't unlink() directory symlinks; it needs rmdir() to be used instead
-		if ($isWindows && is_dir($target))
+		// First try to delete a regular link or file with unlink()
+		if ((is_link($target) || is_file($target)) && @unlink($target))
 		{
-			$res = @rmdir($target);
-		}
-		else
-		{
-			$res = @unlink($target);
+			return true;
 		}
 
-		// Invalid symlinks on WIndows are not reported as directories but require @rmdir to delete them nonetheless.
-		if (!$res && $isWindows)
+		// Windows can't unlink() directory and invalid symlinks; it needs rmdir(). So let's try that first.
+		if ($isWindows && @rmdir($target))
 		{
-			$res = @rmdir($target);
+			return true;
 		}
 
-		// Is this is an actual directory, not an old symlink, by any chance?
-		if (!$res && is_dir($target))
-		{
-			$res = self::recursiveUnlink($target, $throw);
-		}
-
-		return $res;
+		// If I am still here I have a directory. Delete recursively.
+		return self::recursiveUnlink($target);
 	}
 
 	/**
