@@ -5,7 +5,10 @@
  * @license   GNU General Public License version 3, or later
  */
 
-define('IS_WINDOWS', substr(PHP_OS, 0, 3) == 'WIN');
+if (!defined('IS_WINDOWS'))
+{
+	define('IS_WINDOWS', substr(PHP_OS, 0, 3) == 'WIN');
+}
 
 require_once 'phing/Task.php';
 
