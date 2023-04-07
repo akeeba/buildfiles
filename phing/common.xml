@@ -23,6 +23,7 @@
     <property name="dirs.documentation" value="${dirs.root}/documentation" />
     <property name="dirs.composer" value="${dirs.root}" />
     <property name="bin.composer" value="${dirs.root}/../buildfiles/composer.phar" />
+    <property name="dirs.templates" value="${phing.dir}/templates" />
     <!-- ### DocBook XML Stylesheet Paths -->
     <property name="dirs.bin" value="${phing.dir.common}/bin" />
     <property name="dirs.bin.libxml" value="${dirs.bin}/libxml" />
@@ -407,7 +408,7 @@
         <phingcall target="onBeforeRelease">
         </phingcall>
 
-        <!-- If release.json is not specified use either ${phing.dir}/templates/release.json or
+        <!-- If release.json is not specified use either ${dirs.templates}/release.json or
          if it doesn't exist our default release.json file -->
         <if>
             <not>
@@ -415,9 +416,9 @@
             </not>
             <then>
 				<if>
-					<available property="totally.ignored" file="${phing.dir}/templates/release.json" />
+					<available property="totally.ignored" file="${dirs.templates}/release.json" />
 					<then>
-						<property name="release.source" value="${phing.dir}/templates/release.json" />
+						<property name="release.source" value="${dirs.templates}/release.json" />
 					</then>
 					<else>
 						<property name="release.source" value="${phing.dir.common}/release.json" />
@@ -517,14 +518,14 @@
 		<phingcall target="onBeforeRelease">
 		</phingcall>
 
-		<!-- If release.yaml is not specified use either ${phing.dir}/templates/release.yaml or
+		<!-- If release.yaml is not specified use either ${dirs.templates}/release.yaml or
          if it doesn't exist our default release.yaml file -->
 		<if>
 			<not>
 				<isset property="release.source" />
 			</not>
 			<then>
-				<property name="release.source" value="${phing.dir}/templates/release.yaml" />
+				<property name="release.source" value="${dirs.templates}/release.yaml" />
 			</then>
 		</if>
 
@@ -911,9 +912,9 @@
 
 		<!-- Copy the XML manifest file -->
 		<if>
-			<available file="${phing.dir}/templates/${build.template_xml}" property="completely.ignored" />
+			<available file="${dirs.templates}/${build.template_xml}" property="completely.ignored" />
 			<then>
-				<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/${build.component}.xml" overwrite="true">
+				<copy file="${dirs.templates}/${build.template_xml}" tofile="${dirs.component}/${build.component}.xml" overwrite="true">
 					<filterchain>
 						<replacetokens begintoken="##" endtoken="##">
 							<token key="DATE" value="${build.date}" />
@@ -927,9 +928,9 @@
 
 		<!-- Copy the version.php file -->
 		<if>
-			<available file="${phing.dir}/templates/version.php" property="completely.ignored" />
+			<available file="${dirs.templates}/version.php" property="completely.ignored" />
 			<then>
-				<copy file="${phing.dir}/templates/version.php" tofile="${dirs.component}/backend/version.php" overwrite="true">
+				<copy file="${dirs.templates}/version.php" tofile="${dirs.component}/backend/version.php" overwrite="true">
 					<filterchain>
 						<replacetokens begintoken="##" endtoken="##">
 							<token key="DATE" value="${build.date}" />
@@ -1025,11 +1026,11 @@
 			</else>
 		</if>
 
-		<!-- TODO If ${phing.dir}/templates/${build.template_xml} not exists do nothing -->
+		<!-- If ${dirs.templates}/${build.template_xml} not exists do nothing -->
 		<if>
-			<available file="${phing.dir}/templates/${build.template_xml}" />
+			<available file="${dirs.templates}/${build.template_xml}" />
 			<then>
-				<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.component}/cli/file_${build.component}.xml" overwrite="true">
+				<copy file="${dirs.templates}/${build.template_xml}" tofile="${dirs.component}/cli/file_${build.component}.xml" overwrite="true">
 					<filterchain>
 						<replacetokens begintoken="##" endtoken="##">
 							<token key="DATE" value="${build.date}" />
@@ -1583,7 +1584,7 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 
 		<!-- Create the XML manifest. IMPORTANT: THE TARGET NAME IS ALWAYS pkg_something.xml WITHOUT A SUFFIX TO ALLOW
 		 JOOMLA! TO UPGRADE FROM CORE TO PRO WITHOUT SCREWING UP THE #__extensions ENTRIES!!! -->
-		<copy file="${phing.dir}/templates/${build.template_xml}" tofile="${dirs.release}/pkg_${build.component}.xml" overwrite="true">
+		<copy file="${dirs.templates}/${build.template_xml}" tofile="${dirs.release}/pkg_${build.component}.xml" overwrite="true">
 			<filterchain>
 				<replacetokens begintoken="##" endtoken="##">
 					<token key="DATE" value="${build.date}" />
@@ -1605,10 +1606,10 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 
 		<!-- Copy the language folder, if present -->
 		<if>
-			<available property="completely.ignored" file="${phing.dir}/templates/language" type="dir" />
+			<available property="completely.ignored" file="${dirs.templates}/language" type="dir" />
 			<then>
 				<copy todir="${dirs.release}" overwrite="true">
-					<fileset dir="${phing.dir}/templates">
+					<fileset dir="${dirs.templates}">
 						<include name="language/**" />
 					</fileset>
 				</copy>
@@ -1617,9 +1618,9 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 
 		<!-- Copy the script.something.php installation script file, if present -->
 		<if>
-			<available property="completely.ignored" file="${phing.dir}/templates/script.${build.component}.php" />
+			<available property="completely.ignored" file="${dirs.templates}/script.${build.component}.php" />
 			<then>
-				<copy file="${phing.dir}/templates/script.${build.component}.php" tofile="${dirs.release}/script.${build.component}.php" overwrite="true" />
+				<copy file="${dirs.templates}/script.${build.component}.php" tofile="${dirs.release}/script.${build.component}.php" overwrite="true" />
 			</then>
 		</if>
 		<if>
