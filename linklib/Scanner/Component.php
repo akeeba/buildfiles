@@ -282,13 +282,13 @@ class Component extends AbstractScanner
 			}
 		}
 
-		if (empty($siteFilesTag) || empty($adminFilesTag))
+		if (empty($adminFilesTag))
 		{
-			throw new RuntimeException("The {$result->extension} extension needs <files> tags for both site and administrator parts of the component.");
+			throw new RuntimeException("The {$result->extension} extension needs <files> tags for the administrator part of the component.");
 		}
 
 		// Get the site and admin folders
-		if ($siteFilesTag->hasAttribute('folder'))
+		if (!empty($siteFilesTag) && $siteFilesTag->hasAttribute('folder'))
 		{
 			$result->siteFolder = $this->extensionRoot . '/' . $siteFilesTag->getAttribute('folder');
 		}
