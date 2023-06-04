@@ -39,6 +39,8 @@ class AutoVersionTask extends Task
 	 */
 	private $workingCopy;
 
+	private $useCommitHash = true;
+
 	public function getChangelog(): string
 	{
 		return $this->changelog;
@@ -143,10 +145,27 @@ class AutoVersionTask extends Task
 		$this->project->setProperty($this->getPropertyName(), $version);
 	}
 
+	/**
+	 * @return mixed
+	 */
+	public function getUseCommitHash()
+	{
+		return $this->useCommitHash;
+	}
+
+	/**
+	 * @param   mixed  $useCommitHash
+	 */
+	public function setUseCommitHash($useCommitHash): void
+	{
+		$this->useCommitHash = $useCommitHash;
+	}
+
 	private function bumpVersion(string $version, bool $onlyAddDev = false): string
 	{
 		$commitHash = $this->getLatestCommitHash();
-		$devSuffix  = '-dev' . gmdate('YmdHi') . (empty($commitHash) ? '' : ('-rev' . $commitHash));
+		$devSuffix  = '-dev' . gmdate('YmdHi')
+			. (empty($commitHash) || !$this->useCommitHash ? '' : ('-rev' . $commitHash));
 
 		if (!preg_match('/((\d+\.?)+)(((a|alpha|b|beta|rc|dev)\d)*(-[^\s]*)?)?/', $version, $matches))
 		{
