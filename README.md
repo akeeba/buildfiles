@@ -10,7 +10,7 @@ Learn more about the [Common Phing Script](phing/README.md).
 
 ## COPYRIGHT AND DISCLAIMER
 Akeeba Build Tools - Extension builder for Joomla!
-Copyright (c) 2010-2023 Akeeba Ltd
+Copyright (c)2010-2023 Nicholas K. Dionysopoulos / Akeeba Ltd
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
