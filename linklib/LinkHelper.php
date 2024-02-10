@@ -114,6 +114,11 @@ abstract class LinkHelper
 			}
 		}
 
+		if ($realFrom === false)
+		{
+			return;
+		}
+
 		if ($type == 'symlink')
 		{
 			if ($isWindows)
