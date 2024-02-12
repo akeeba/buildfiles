@@ -227,6 +227,7 @@ class ZipmeTask extends MatchingTask
 					$f = new PhingFile($fsBasedir, $file);
 
 					$fileAbsolutePath = $f->getPath();
+
 					$fileDir = rtrim(dirname($fileAbsolutePath), '/\\');
 					$fileBase = basename($fileAbsolutePath);
 
@@ -266,6 +267,10 @@ class ZipmeTask extends MatchingTask
 					if (is_dir($fileAbsolutePath))
 					{
 						$zip->addEmptyDir($fileRelativePath);
+					}
+					elseif (PHP_OS_FAMILY === 'Windows' && is_link($fileAbsolutePath))
+					{
+						$zip->addFromString($fileRelativePath, file_get_contents($fileAbsolutePath));
 					}
 					else
 					{
