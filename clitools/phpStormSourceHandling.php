@@ -409,6 +409,11 @@ class PhpStormSourceHandling
 		array_pop($basePathParts);
 		$basePath = implode('/', $basePathParts);
 
+		if (PHP_OS_FAMILY === 'Windows')
+		{
+			$basePath = $this->translateWinPath($basePath);
+		}
+
 		foreach ($namespaceMap as $namespace => $path)
 		{
 			$realPath = realpath($path);
@@ -422,6 +427,11 @@ class PhpStormSourceHandling
 			if (empty($realPath))
 			{
 				continue;
+			}
+
+			if (PHP_OS_FAMILY === 'Windows')
+			{
+				$realPath = $this->translateWinPath($realPath);
 			}
 
 			/**
@@ -448,6 +458,21 @@ class PhpStormSourceHandling
 		$dom->loadXML($xml->asXML());
 
 		file_put_contents($imlFile, $dom->saveXML());
+	}
+
+	// Convert Windows paths to UNIX
+	private function translateWinPath($p_path)
+	{
+		if (stristr(php_uname(), 'windows'))
+		{
+			// Change potential windows directory separator
+			if ((strpos($p_path, '\\') > 0) || (substr($p_path, 0, 1) == '\\'))
+			{
+				$p_path = strtr($p_path, '\\', '/');
+			}
+		}
+
+		return $p_path;
 	}
 }
 
