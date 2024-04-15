@@ -5,9 +5,9 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once 'phing/Task.php';
+namespace tasks;
 
-class GitDateTask extends Task
+class GitDateTask extends \Phing\Task
 {
 	/**
 	 * Git.date
@@ -95,7 +95,7 @@ class GitDateTask extends Task
 	/**
 	 * The main entry point
 	 *
-	 * @throws  BuildException
+	 * @throws  \Phing\Exception\BuildException
 	 */
 	function main()
 	{

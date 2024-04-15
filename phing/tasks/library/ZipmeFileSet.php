@@ -24,7 +24,7 @@ class ZipmeFileSet extends JpaFileSet
 	 *
 	 * @param   FileSet  $fileset
 	 */
-	public function __construct(FileSet $fileset = null)
+	public function __construct($fileset = null)
 	{
 		parent::__construct($fileset);
 

@@ -12,7 +12,7 @@
  * but hopefully they will be in the future.
  *
  */
-class JpaFileSet extends FileSet
+class JpaFileSet extends \Phing\Type\FileSet
 {
 	/**
 	 * The files to include in the archive
@@ -29,53 +29,56 @@ class JpaFileSet extends FileSet
 	 *
 	 * @return  array  A list of file and directory names, relative to the baseDir for the project.
 	 */
-	public function getFiles(Project $p, $includeEmpty = true)
+	public function getFiles($includeEmpty = true, ...$options)
 	{
-		if ($this->files === null)
+		if ($this->files !== null)
 		{
+			return $this->files;
+		}
 
-			$ds          = $this->getDirectoryScanner($p);
-			$this->files = $ds->getIncludedFiles();
+		$p = $this->getProject();
 
-			if ($includeEmpty)
+		$ds          = $this->getDirectoryScanner($p);
+		$this->files = $ds->getIncludedFiles();
+
+		if ($includeEmpty)
+		{
+			// first any empty directories that will not be implicitly added by any of the files
+			$implicitDirs = array();
+
+			foreach ($this->files as $file)
 			{
-				// first any empty directories that will not be implicitly added by any of the files
-				$implicitDirs = array();
+				$implicitDirs[] = dirname($file);
+			}
 
-				foreach ($this->files as $file)
+			$incDirs = $ds->getIncludedDirectories();
+
+			/**
+			 * We'll need to add to that list of implicit dirs any directories that contain other *directories* (and
+			 * not files), since otherwise we get duplicate directories in the resulting JPA archive.
+			 */
+			foreach ($incDirs as $dir)
+			{
+				foreach ($incDirs as $dircheck)
 				{
-					$implicitDirs[] = dirname($file);
-				}
-
-				$incDirs = $ds->getIncludedDirectories();
-
-				/**
-				 * We'll need to add to that list of implicit dirs any directories that contain other *directories* (and
-				 * not files), since otherwise we get duplicate directories in the resulting JPA archive.
-				 */
-				foreach ($incDirs as $dir)
-				{
-					foreach ($incDirs as $dircheck)
+					if (!empty($dir) && $dir == dirname($dircheck))
 					{
-						if (!empty($dir) && $dir == dirname($dircheck))
-						{
-							$implicitDirs[] = $dir;
-						}
+						$implicitDirs[] = $dir;
 					}
 				}
+			}
 
-				$implicitDirs = array_unique($implicitDirs);
+			$implicitDirs = array_unique($implicitDirs);
 
-				// Now add any empty dirs (dirs not covered by the implicit dirs) to the files array.
-				foreach ($incDirs as $dir)
+			// Now add any empty dirs (dirs not covered by the implicit dirs) to the files array.
+			foreach ($incDirs as $dir)
+			{
+				// We cannot simply use array_diff() since we want to disregard empty/. dirs
+
+				if ($dir != "" && $dir != "." && !in_array($dir, $implicitDirs))
 				{
-					// We cannot simply use array_diff() since we want to disregard empty/. dirs
-
-					if ($dir != "" && $dir != "." && !in_array($dir, $implicitDirs))
-					{
-						// It's an empty dir, so we'll add it.
-						$this->files[] = $dir;
-					}
+					// It's an empty dir, so we'll add it.
+					$this->files[] = $dir;
 				}
 			}
 		}

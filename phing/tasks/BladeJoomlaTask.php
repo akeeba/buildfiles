@@ -5,10 +5,22 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use DirectoryIterator;
+use Exception;
+use FOF30\View\Compiler\Blade;
+use Phing\Exception\BuildException;
+use Phing\Project;
+use Phing\Task;
+use Phing\Type\DirSet;
+
 /**
  * Class BladeJoomlaTask
  *
  * Precompiles Blade templates for Joomla components.
+ *
+ * @deprecated
  */
 class BladeJoomlaTask extends Task
 {
@@ -136,7 +148,7 @@ class BladeJoomlaTask extends Task
 		try
 		{
 			$container = FOF30\Container\Container::getInstance($this->component);
-			$blade = new \FOF30\View\Compiler\Blade($container);
+			$blade     = new Blade($container);
 		}
 		catch (Exception $e)
 		{
@@ -146,7 +158,7 @@ class BladeJoomlaTask extends Task
 		foreach ($this->dirsets as $dirSet)
 		{
 			$baseDir = $dirSet->getDir($this->project);
-			$roots = $dirSet->getDirectoryScanner($this->project)->getIncludedDirectories();
+			$roots   = $dirSet->getDirectoryScanner($this->project)->getIncludedDirectories();
 
 			if (empty($roots))
 			{
@@ -189,14 +201,14 @@ class BladeJoomlaTask extends Task
 						continue;
 					}
 
-					$tmplPath     = $viewDir->getRealPath();
-					$outPath      = $outRoot . '/' . $viewDir->getBasename();
+					$tmplPath = $viewDir->getRealPath();
+					$outPath  = $outRoot . '/' . $viewDir->getBasename();
 
 					// Do I have to dive into a tmpl directory...?
-					if (is_dir( $tmplPath . '/tmpl'))
+					if (is_dir($tmplPath . '/tmpl'))
 					{
 						// Note that $outPath is inside the PrecompiledTemplates folder, thius it never uses a tmpl subdirectory!
-						$tmplPath     .= '/tmpl';
+						$tmplPath .= '/tmpl';
 					}
 
 					if (!is_dir($tmplPath))
@@ -222,7 +234,7 @@ class BladeJoomlaTask extends Task
 							continue;
 						}
 
-						$inFile  = $file->getRealPath();
+						$inFile = $file->getRealPath();
 						$outFile = $outPath . '/' . substr(basename($inFile), 0, -10) . '.php';
 
 						$this->log("Precompiling $inFile to $outFile", Project::MSG_VERBOSE);
@@ -243,7 +255,9 @@ class BladeJoomlaTask extends Task
 
 						if (!file_put_contents($outFile, $compiled))
 						{
-							throw new BuildException("Cannot write to pre-compiled Blade file $compiled");
+							throw new BuildException(
+								"Cannot write to pre-compiled Blade file $compiled"
+							);
 						}
 					}
 				}

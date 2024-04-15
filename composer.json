@@ -15,14 +15,15 @@
     "rector/rector": "^0.10"
   },
   "suggest": {
-    "ext-ssh2": "*",
-    "ext-simplexml": "*",
     "ext-curl": "*",
-    "ext-xsl": "*",
-    "ext-zlib": "*",
     "ext-dom": "*",
+    "ext-fileinfo": "*",
+    "ext-libxml": "*",
+    "ext-simplexml": "*",
+    "ext-ssh2": "*",
+    "ext-xsl": "*",
     "ext-zip": "*",
-    "ext-libxml": "*"
+    "ext-zlib": "*"
   },
   "config": {
     "platform" : {

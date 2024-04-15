@@ -5,8 +5,11 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once 'phing/Task.php';
-//require_once 'phing/tasks/ext/SymlinkTask.php';
+namespace tasks;
+
+use Akeeba\LinkLibrary\LinkHelper;
+use Phing\Task\System\SymlinkTask;
+
 require_once __DIR__ . '/../../linklib/include.php';
 
 /**
@@ -50,7 +53,7 @@ class LinkTask extends SymlinkTask
 	/**
 	 * Setter for _type.
 	 *
-	 * @param    string $type
+	 * @param   string  $type
 	 */
 	public function setType($type)
 	{
@@ -82,7 +85,7 @@ class LinkTask extends SymlinkTask
 		if (is_string($map))
 		{
 			$from = $map;
-			\Akeeba\LinkLibrary\LinkHelper::makeLink($from, $to, $type);
+			LinkHelper::makeLink($from, $to, $type);
 
 			return true;
 		}
@@ -91,7 +94,7 @@ class LinkTask extends SymlinkTask
 		foreach ($map as $name => $from)
 		{
 			$realTo = $to . DIRECTORY_SEPARATOR . $name;
-			\Akeeba\LinkLibrary\LinkHelper::makeLink($from, $realTo, $type);
+			LinkHelper::makeLink($from, $realTo, $type);
 		}
 
 		return true;

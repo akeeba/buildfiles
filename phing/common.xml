@@ -60,31 +60,31 @@
     <!-- Custom task definitions -->
     <includepath classpath="${phing.dir.common}" />
 
-	<taskdef name="svnadd" classname="tasks.SvnaddTask"/>
-	<taskdef name="svnremove" classname="tasks.SvnremoveTask"/>
-	<taskdef name="xmlversion" classname="tasks.XmlVersionTask"/>
-	<taskdef name="xmlupdate" classname="tasks.XmlUpdateTask"/>
-	<taskdef name="wordpressentrypoint" classname="tasks.WordPressEntryPointTask"/>
-    <taskdef name="GitHubAsset" classname="tasks.GitHubAssetTask" />
-    <taskdef name="GitHubRelease" classname="tasks.GitHubReleaseTask" />
-    <taskdef name="autoversion" classname="tasks.AutoVersionTask" />
-    <taskdef name="bladeawf" classname="tasks.BladeAwfTask" />
-    <taskdef name="bladejoomla" classname="tasks.BladeJoomlaTask" />
-    <taskdef name="closure" classname="tasks.ClosureTask" />
-    <taskdef name="curlsftp" classname="tasks.CurlSftpTask" />
-    <taskdef name="docbook2epub" classname="tasks.DocBookToEpubTask" />
-    <taskdef name="docbook2fo" classname="tasks.DocBookToFoTask" />
-    <taskdef name="gitdate" classname="tasks.GitDateTask" />
-    <taskdef name="gitversion" classname="tasks.GitVersionTask" />
-    <taskdef name="jpa" classname="tasks.JPATask" />
-    <taskdef name="link" classname="tasks.LinkTask" />
-    <taskdef name="phpstormsources" classname="tasks.PhpStormSources" />
-    <taskdef name="projectlink" classname="tasks.ProjectLinkTask" />
-    <taskdef name="relinksite" classname="tasks.RelinkSiteTask" />
-    <taskdef name="relinkwp" classname="tasks.RelinkWPSiteTask" />
+	<taskdef name="svnadd" classname="tasks\SvnaddTask"/>
+	<taskdef name="svnremove" classname="tasks\SvnremoveTask"/>
+	<taskdef name="xmlversion" classname="tasks\XmlVersionTask"/>
+	<taskdef name="xmlupdate" classname="tasks\XmlUpdateTask"/>
+	<taskdef name="wordpressentrypoint" classname="tasks\WordPressEntryPointTask"/>
+    <taskdef name="GitHubAsset" classname="tasks\GitHubAssetTask" />
+    <taskdef name="GitHubRelease" classname="tasks\GitHubReleaseTask" />
+    <taskdef name="autoversion" classname="tasks\AutoVersionTask" />
+    <taskdef name="bladeawf" classname="tasks\BladeAwfTask" />
+    <taskdef name="bladejoomla" classname="tasks\BladeJoomlaTask" />
+    <taskdef name="closure" classname="tasks\ClosureTask" />
+    <taskdef name="curlsftp" classname="tasks\CurlSftpTask" />
+    <taskdef name="docbook2epub" classname="tasks\DocBookToEpubTask" />
+    <taskdef name="docbook2fo" classname="tasks\DocBookToFoTask" />
+    <taskdef name="gitdate" classname="tasks\GitDateTask" />
+    <taskdef name="gitversion" classname="tasks\GitVersionTask" />
+    <taskdef name="jpa" classname="tasks\JPATask" />
+    <taskdef name="link" classname="tasks\LinkTask" />
+    <taskdef name="phpstormsources" classname="tasks\PhpStormSources" />
+    <taskdef name="projectlink" classname="tasks\ProjectLinkTask" />
+    <taskdef name="relinksite" classname="tasks\RelinkSiteTask" />
+    <taskdef name="relinkwp" classname="tasks\RelinkWPSiteTask" />
 	<!-- See https://github.com/rchouinard/phing-tasks/blob/master/classes/rych/tasks/YuiCompressorTask.php -->
-	<taskdef name="yuicompressor" classname="tasks.YuiCompressorTask" />
-    <taskdef name="zipme" classname="tasks.ZipmeTask" />
+	<taskdef name="yuicompressor" classname="tasks\YuiCompressorTask" />
+    <taskdef name="zipme" classname="tasks\ZipmeTask" />
 
 	<!--
 	Generate the installation packages and the documentation
@@ -665,7 +665,7 @@
 			<include name="${github.release.file}" />
 		</fileset>
 
-		<foreach param="filename" target="github-release-file">
+		<foreach param="filename" target="github-release-file" inheritall="true" inheritrefs="true">
 			<fileset refid="github_release_files" />
 		</foreach>
 
@@ -1055,7 +1055,7 @@
 	Builds all the modules found in the modules/site and modules/admin folders of your repository
 	-->
 	<target name="package-modules" description="Build all modules">
-		<foreach param="dirname" absparam="absname" target="package-module-folder">
+		<foreach param="dirname" absparam="absname" target="package-module-folder" inheritall="true" inheritrefs="true">
 			<fileset dir="${dirs.modules}">
 				<type type="dir" />
 				<depth max="0" min="0" />
@@ -1069,7 +1069,7 @@
 	<target name="package-module-folder" description="Iterate over the modules in an area (site, admin) directory">
 		<property name="module_area" value="${dirname}" />
 
-		<foreach param="module_name" absparam="module_dir" target="package-module-item">
+		<foreach param="module_name" absparam="module_dir" target="package-module-item" inheritall="true" inheritrefs="true">
 			<fileset dir="${absname}">
 				<type type="dir" />
 				<depth max="0" min="0" />
@@ -1132,7 +1132,7 @@
 	Builds all the plugins found in the plugins/* folders of your repository
 	-->
 	<target name="package-plugins" description="Build all plugins">
-		<foreach param="dirname" absparam="absname" target="package-plugin-folder">
+		<foreach param="dirname" absparam="absname" target="package-plugin-folder" inheritall="true" inheritrefs="true">
 			<fileset dir="${dirs.plugins}">
 				<type type="dir" />
 				<depth max="0" min="0" />
@@ -1146,7 +1146,7 @@
 	<target name="package-plugin-folder" description="Iterate over the plugins in an area (system, user, ...) directory">
 		<property name="plugin_area" value="${dirname}" />
 
-		<foreach param="plugin_name" absparam="plugin_dir" target="package-plugin-item">
+		<foreach param="plugin_name" absparam="plugin_dir" target="package-plugin-item" inheritall="true" inheritrefs="true">
 			<fileset dir="${absname}">
 				<type type="dir" />
 				<depth max="0" min="0" />

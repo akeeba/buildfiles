@@ -5,6 +5,12 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use DOMDocument;
+use DOMNode;
+use Phing\Task;
+
 /**
  * Massages a Joomla XML update file to remove duplicate versions
  *
@@ -48,7 +54,7 @@ class XmlUpdateTask extends Task
 			{
 				if ($subNode->nodeName === 'version')
 				{
-					$version    = trim($subNode->textContent);
+					$version = trim($subNode->textContent);
 
 					if (!in_array($version, $versions))
 					{
@@ -67,16 +73,14 @@ class XmlUpdateTask extends Task
 		$generated = $xml->saveXML();
 
 		$generated = preg_replace_callback(
-			'#<updates>(.*)</updates>#s',
-			function (array $matches) {
-				$internal = str_replace("\n", "", $matches[0]);
+			'#<updates>(.*)</updates>#s', function (array $matches) {
+			$internal = str_replace("\n", "", $matches[0]);
 
-				$internal = preg_replace('#\s{2,}#', ' ', $internal);
-				$internal = preg_replace('#> <#', '><', $internal);
+			$internal = preg_replace('#\s{2,}#', ' ', $internal);
+			$internal = preg_replace('#> <#', '><', $internal);
 
-				return $internal;
-			},
-			$generated
+			return $internal;
+		}, $generated
 		);
 
 		file_put_contents($this->tofile, $generated);

@@ -5,26 +5,36 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use DOMDocument;
+use Phing\Io\File;
+use Phing\Project;
+use Phing\Task;
+use RuntimeException;
+use XSLTProcessor;
+
+/** @deprecated */
 class DocBookToFoTask extends Task
 {
 	/**
 	 * Path where the DocBook XML Stylesheet distribution is stored
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	protected $xsltRoot;
 
 	/**
 	 * The source DocBook XML file to convert
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	protected $docBookFile;
 
 	/**
 	 * The path of the generated .fo file
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	protected $foFile;
 
@@ -43,7 +53,7 @@ class DocBookToFoTask extends Task
 
 		if (!$xslDoc->load($xslPath))
 		{
-			throw new \RuntimeException(sprintf("Cannot load XSLT file %s", $xslPath));
+			throw new RuntimeException(sprintf("Cannot load XSLT file %s", $xslPath));
 		}
 
 		// Load the XML document
@@ -53,14 +63,14 @@ class DocBookToFoTask extends Task
 
 		if (!$xmlDoc->load($source, LIBXML_DTDATTR | LIBXML_NOENT | LIBXML_NONET | LIBXML_XINCLUDE))
 		{
-			throw new \RuntimeException(sprintf("Cannot load DocBook XML file %s", $source));
+			throw new RuntimeException(sprintf("Cannot load DocBook XML file %s", $source));
 		}
 
 		// Apply XInclude directives (include sub-files)
 		$xmlDoc->xinclude(LIBXML_DTDATTR | LIBXML_NOENT | LIBXML_NONET | LIBXML_XINCLUDE);
 
 		// Setup the XSLT processor
-		$parameters = array(
+		$parameters = [
 			'body.start.indent'             => 0,
 			'variablelist.term.break.after' => 1,
 			'variablelist.term.separator'   => '&quot;&quot;',
@@ -70,14 +80,14 @@ class DocBookToFoTask extends Task
 			'fop1.extensions'               => 1,
 			'highlight.source'              => 1,
 			'paper.type'                    => 'A4',
-		);
+		];
 
 		$xslt = new XSLTProcessor();
 		$xslt->importStylesheet($xslDoc);
 
 		if (!$xslt->setParameter('', $parameters))
 		{
-			throw new \RuntimeException("Cannot set XSLTProcessor parameters");
+			throw new RuntimeException("Cannot set XSLTProcessor parameters");
 		}
 
 		// Process it!
@@ -93,18 +103,18 @@ class DocBookToFoTask extends Task
 
 		if ($result === false)
 		{
-			throw new \RuntimeException(sprintf("Failed to process DocBook XML file %s", $source));
+			throw new RuntimeException(sprintf("Failed to process DocBook XML file %s", $source));
 		}
 	}
 
 	/**
 	 * Set the xsltRoot property: absolute path with the DocBook XSL Stylesheets distribution
 	 *
-	 * @param   PhingFile  $xsltRoot
+	 * @param   File  $xsltRoot
 	 *
 	 * @return  void
 	 */
-	public function setXsltRoot(PhingFile $xsltRoot)
+	public function setXsltRoot(File $xsltRoot)
 	{
 		$this->xsltRoot = $xsltRoot;
 	}
@@ -112,11 +122,11 @@ class DocBookToFoTask extends Task
 	/**
 	 * Set the source property: absolute filename of the DocBook XML file to process
 	 *
-	 * @param   PhingFile $docBookFile
+	 * @param   File  $docBookFile
 	 *
 	 * @return  void
 	 */
-	public function setDocBookFile(PhingFile $docBookFile)
+	public function setDocBookFile(File $docBookFile)
 	{
 		$this->docBookFile = $docBookFile;
 	}
@@ -124,11 +134,11 @@ class DocBookToFoTask extends Task
 	/**
 	 * Set the target property: absolute filename of the resulting .fo file
 	 *
-	 * @param   PhingFile $foFile
+	 * @param   File  $foFile
 	 *
 	 * @return  void
 	 */
-	public function setFoFile(PhingFile $foFile)
+	public function setFoFile(File $foFile)
 	{
 		$this->foFile = $foFile;
 	}

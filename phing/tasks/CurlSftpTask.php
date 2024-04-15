@@ -5,6 +5,13 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use Phing\Exception\BuildException;
+use Phing\Project;
+use Phing\Task\Ext\Ssh\ScpTask;
+use RuntimeException;
+
 /**
  * Copy files to and from a remote host using SFTP through cURL or SSH2, depending on what is available.
  */
@@ -361,7 +368,7 @@ class CurlSftpTask extends ScpTask
 	 * list the contents of the initial directory. The listing is not parsed (we don't really care!) and we do NOT check
 	 * if we can upload files to that remote folder.
 	 *
-	 * @throws  \RuntimeException
+	 * @throws  RuntimeException
 	 */
 	protected function connect()
 	{
@@ -377,7 +384,7 @@ class CurlSftpTask extends ScpTask
 
 		if ($errNo)
 		{
-			throw new \RuntimeException("cURL Error $errNo connecting to remote SFTP server: $error", 500);
+			throw new RuntimeException("cURL Error $errNo connecting to remote SFTP server: $error", 500);
 		}
 	}
 
@@ -395,7 +402,7 @@ class CurlSftpTask extends ScpTask
 
 		if ($fp === false)
 		{
-			throw new \RuntimeException("Unreadable local file $localFilename");
+			throw new RuntimeException("Unreadable local file $localFilename");
 		}
 
 		// Note: don't manually close the file pointer, it's closed automatically by uploadFromHandle
@@ -403,7 +410,7 @@ class CurlSftpTask extends ScpTask
 		{
 			$this->uploadFromHandle($remoteFilename, $fp);
 		}
-		catch (\RuntimeException $e)
+		catch (RuntimeException $e)
 		{
 			return false;
 		}
@@ -419,7 +426,7 @@ class CurlSftpTask extends ScpTask
 	 *
 	 * @return  void
 	 *
-	 * @throws  \RuntimeException
+	 * @throws  RuntimeException
 	 */
 	protected function uploadFromHandle($remoteFilename, $fp)
 	{
@@ -443,7 +450,7 @@ class CurlSftpTask extends ScpTask
 
 		if ($error_no)
 		{
-			throw new \RuntimeException($error, $error_no);
+			throw new RuntimeException($error, $error_no);
 		}
 	}
 

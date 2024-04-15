@@ -5,6 +5,15 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use DirectoryIterator;
+use Exception;
+use Phing\Exception\BuildException;
+use Phing\Project;
+use Phing\Task;
+use Phing\Type\DirSet;
+
 /**
  * Class BladeAWFTask
  *

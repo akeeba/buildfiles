@@ -5,6 +5,11 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use Phing\Exception\BuildException;
+use Phing\Task;
+
 class WordPressEntryPointTask extends Task
 {
 	private $file = '';
@@ -92,8 +97,7 @@ class WordPressEntryPointTask extends Task
 	private function replace(string $contents, array $replacements)
 	{
 		$lines = array_map(
-			function (string $line) use ($replacements): string
-			{
+			function (string $line) use ($replacements): string {
 				foreach ($replacements as $key => $newValue)
 				{
 					$test = $key . ':';
@@ -105,8 +109,7 @@ class WordPressEntryPointTask extends Task
 				}
 
 				return $line;
-			},
-			explode("\n", $contents)
+			}, explode("\n", $contents)
 		);
 
 		return implode("\n", $lines);

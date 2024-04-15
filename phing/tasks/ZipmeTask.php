@@ -5,11 +5,16 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once "phing/Task.php";
-//require_once 'phing/tasks/system/MatchingTask.php';
-//include_once 'phing/util/SourceFileScanner.php';
-//include_once 'phing/mappers/MergeMapper.php';
-//include_once 'phing/util/StringHelper.php';
+namespace tasks;
+
+use Phing\Exception\BuildException;
+use Phing\Io\File;
+use Phing\Io\IOException;
+use Phing\Project;
+use Phing\Task\System\MatchingTask;
+use Phing\Type\FileSet;
+use ZipArchive;
+use ZipmeFileSet;
 
 require_once __DIR__ . '/library/ZipmeFileSet.php';
 
@@ -23,14 +28,14 @@ class ZipmeTask extends MatchingTask
 	/**
 	 * The output file
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	private $zipFile;
 
 	/**
 	 * The directory that holds the data to include in the archive
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	private $baseDir;
 
@@ -53,7 +58,7 @@ class ZipmeTask extends MatchingTask
 	 *
 	 * @var   array
 	 */
-	private $filesets = array();
+	private $filesets = [];
 
 	/**
 	 * Add a new fileset.
@@ -62,7 +67,7 @@ class ZipmeTask extends MatchingTask
 	 */
 	public function createFileSet()
 	{
-		$this->fileset = new ZipmeFileSet();
+		$this->fileset    = new ZipmeFileSet();
 		$this->filesets[] = $this->fileset;
 
 		return $this->fileset;
@@ -75,7 +80,7 @@ class ZipmeTask extends MatchingTask
 	 */
 	public function createZipmeFileSet()
 	{
-		$this->fileset = new ZipmeFileSet();
+		$this->fileset    = new ZipmeFileSet();
 		$this->filesets[] = $this->fileset;
 
 		return $this->fileset;
@@ -84,9 +89,9 @@ class ZipmeTask extends MatchingTask
 	/**
 	 * Set the name/location of where to create the JPA file.
 	 *
-	 * @param   PhingFile  $destFile  The location of the output JPA file
+	 * @param   File  $destFile  The location of the output JPA file
 	 */
-	public function setDestFile(PhingFile $destFile)
+	public function setDestFile(File $destFile)
 	{
 		$this->zipFile = $destFile;
 	}
@@ -100,17 +105,17 @@ class ZipmeTask extends MatchingTask
 	 */
 	public function setIncludeEmptyDirs($bool)
 	{
-		$this->includeEmpty = (boolean)$bool;
+		$this->includeEmpty = (boolean) $bool;
 	}
 
 	/**
 	 * This is the base directory to look in for files to archive.
 	 *
-	 * @param   PhingFile  $baseDir  The base directory to scan
+	 * @param   File  $baseDir  The base directory to scan
 	 *
 	 * @return  void
 	 */
-	public function setBasedir(PhingFile $baseDir)
+	public function setBasedir(File $baseDir)
 	{
 		$this->baseDir = $baseDir;
 	}
@@ -167,7 +172,7 @@ class ZipmeTask extends MatchingTask
 				throw new BuildException("ZIP file path $absolutePath is not a path.", $this->getLocation());
 			}
 
-			$zip = new ZipArchive();
+			$zip        = new ZipArchive();
 			$openResult = $zip->open($this->zipFile->getAbsolutePath(), ZipArchive::CREATE);
 
 			if ($openResult !== true)
@@ -220,20 +225,20 @@ class ZipmeTask extends MatchingTask
 				$fsBasedir = (null != $this->baseDir) ? $this->baseDir : $fs->getDir($this->project);
 				$removeDir = str_replace('\\', '/', $fsBasedir->getPath());
 
-				$filesToZip = array();
+				$filesToZip = [];
 
 				foreach ($files as $file)
 				{
-					$f = new PhingFile($fsBasedir, $file);
+					$f = new File($fsBasedir, $file);
 
 					$fileAbsolutePath = $f->getPath();
 
-					$fileDir = rtrim(dirname($fileAbsolutePath), '/\\');
+					$fileDir  = rtrim(dirname($fileAbsolutePath), '/\\');
 					$fileBase = basename($fileAbsolutePath);
 
 					// Only use lowercase for $disallowedBases because we'll convert $fileBase to lowercase
-					$disallowedBases = array('.ds_store', '.svn', '.gitignore', 'thumbs.db');
-					$fileBaseLower = strtolower($fileBase);
+					$disallowedBases = ['.ds_store', '.svn', '.gitignore', 'thumbs.db'];
+					$fileBaseLower   = strtolower($fileBase);
 
 					if (in_array($fileBaseLower, $disallowedBases))
 					{
@@ -257,7 +262,8 @@ class ZipmeTask extends MatchingTask
 						$fileRelativePath = substr($fileRelativePath, strlen($removeDir) + 1);
 					}
 
-					$fileRelativePath = empty($this->prefix) ? $fileRelativePath : ($this->prefix . '/' . $fileRelativePath);
+					$fileRelativePath = empty($this->prefix) ? $fileRelativePath
+						: ($this->prefix . '/' . $fileRelativePath);
 
 					if (!file_exists($fileAbsolutePath) || !is_readable($fileAbsolutePath))
 					{

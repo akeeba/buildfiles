@@ -5,7 +5,13 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once 'phing/Task.php';
+namespace tasks;
+
+use Akeeba\LinkLibrary\Relink;
+use Phing\Exception\BuildException;
+use Phing\Project;
+use Phing\Task;
+use Throwable;
 
 /**
  * Class RelinkSiteTask
@@ -76,7 +82,9 @@ class RelinkSiteTask extends Task
 
 			if (is_null($home))
 			{
-				throw new BuildException("Site root folder {$this->site} cannot be resolved: your environment does not return information on the user's Home folder location.");
+				throw new BuildException(
+					"Site root folder {$this->site} cannot be resolved: your environment does not return information on the user's Home folder location."
+				);
 			}
 
 			$this->site = $home . DIRECTORY_SEPARATOR . substr($this->site, 2);
@@ -95,7 +103,7 @@ class RelinkSiteTask extends Task
 		@error_reporting(E_ALL);
 		try
 		{
-			$relink = new \Akeeba\LinkLibrary\Relink($this->repository);
+			$relink = new Relink($this->repository);
 			$relink->setVerbose(true);
 			$relink->relink($this->site);
 		}

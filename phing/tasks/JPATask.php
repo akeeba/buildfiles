@@ -5,11 +5,16 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once "phing/Task.php";
-//require_once 'phing/tasks/system/MatchingTask.php';
-//include_once 'phing/util/SourceFileScanner.php';
-//include_once 'phing/mappers/MergeMapper.php';
-//include_once 'phing/util/StringHelper.php';
+namespace tasks;
+
+use JpaFileSet;
+use JPAMaker;
+use Phing\Exception\BuildException;
+use Phing\Io\File;
+use Phing\Io\IOException;
+use Phing\Project;
+use Phing\Task\System\MatchingTask;
+
 require_once __DIR__ . '/library/jpa.php';
 require_once __DIR__ . '/library/JPAFileSet.php';
 
@@ -21,14 +26,14 @@ class JpaTask extends MatchingTask
 	/**
 	 * The output file
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	private $jpaFile;
 
 	/**
 	 * The directory that holds the data to include in the archive
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	private $baseDir;
 
@@ -51,7 +56,7 @@ class JpaTask extends MatchingTask
 	 *
 	 * @var   array
 	 */
-	private $filesets = array();
+	private $filesets = [];
 
 	/**
 	 * Add a new fileset.
@@ -82,9 +87,9 @@ class JpaTask extends MatchingTask
 	/**
 	 * Set the name/location of where to create the JPA file.
 	 *
-	 * @param   PhingFile  $destFile  The location of the output JPA file
+	 * @param   File  $destFile  The location of the output JPA file
 	 */
-	public function setDestFile(PhingFile $destFile)
+	public function setDestFile(File $destFile)
 	{
 		$this->jpaFile = $destFile;
 	}
@@ -98,17 +103,17 @@ class JpaTask extends MatchingTask
 	 */
 	public function setIncludeEmptyDirs($bool)
 	{
-		$this->includeEmpty = (boolean)$bool;
+		$this->includeEmpty = (boolean) $bool;
 	}
 
 	/**
 	 * This is the base directory to look in for files to archive.
 	 *
-	 * @param   PhingFile  $baseDir  The base directory to scan
+	 * @param   File  $baseDir  The base directory to scan
 	 *
 	 * @return  void
 	 */
-	public function setBasedir(PhingFile $baseDir)
+	public function setBasedir(File $baseDir)
 	{
 		$this->baseDir = $baseDir;
 	}
@@ -153,7 +158,9 @@ class JpaTask extends MatchingTask
 		{
 			if (empty($this->filesets))
 			{
-				throw new BuildException("You must supply some nested filesets.", $this->getLocation());
+				throw new BuildException(
+					"You must supply some nested filesets.", $this->getLocation()
+				);
 			}
 
 			$this->log("Building JPA: " . $this->jpaFile->__toString(), Project::MSG_INFO);
@@ -168,7 +175,7 @@ class JpaTask extends MatchingTask
 
 				foreach ($files as $file)
 				{
-					$f = new PhingFile($fsBasedir, $file);
+					$f = new File($fsBasedir, $file);
 
 					$pathInJPA = $this->prefix . $f->getPathWithoutBase($fsBasedir);
 					$jpa->addFile($f->getPath(), $pathInJPA);

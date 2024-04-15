@@ -5,6 +5,8 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
 if (!defined('IS_WINDOWS'))
 {
 	define('IS_WINDOWS', substr(PHP_OS, 0, 3) == 'WIN');
@@ -17,8 +19,10 @@ require_once 'phing/Task.php';
  * This is a tricky task since we have several symlinks, the easiest way is to copy all files to a temporary directory
  * and then run a diff between the exported files and the working copy. Files that are only inside the working copy are
  * the obsolete ones, thus they must be deleted
+ *
+ * @deprecated
  */
-class SvnremoveTask extends ExecTask
+class SvnremoveTask extends \Phing\Task\System\ExecTask
 {
 	/**
 	 * The working copy.

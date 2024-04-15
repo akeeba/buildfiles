@@ -5,19 +5,27 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use DOMDocument;
+use Phing\Io\File;
+use Phing\Project;
+use Phing\Task;
+use XSLTProcessor;
+
 class DocBookToEpubTask extends Task
 {
 	/**
 	 * Path where the DocBook XML Stylesheet distribution is stored
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	protected $xsltRoot;
 
 	/**
 	 * The source DocBook XML file to convert
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	protected $docBookFile;
 
@@ -26,7 +34,7 @@ class DocBookToEpubTask extends Task
 	 *
 	 * @see   https://sourceforge.net/projects/docbook/files/epub3/
 	 *
-	 * @var   PhingFile
+	 * @var   File
 	 */
 	protected $epubPath;
 
@@ -102,11 +110,11 @@ class DocBookToEpubTask extends Task
 	/**
 	 * Set the xsltRoot property: absolute path with the DocBook XSL Stylesheets distribution
 	 *
-	 * @param   PhingFile $xsltRoot
+	 * @param   File $xsltRoot
 	 *
 	 * @return  void
 	 */
-	public function setXsltRoot(PhingFile $xsltRoot)
+	public function setXsltRoot(File $xsltRoot)
 	{
 		$this->xsltRoot = $xsltRoot;
 	}
@@ -114,11 +122,11 @@ class DocBookToEpubTask extends Task
 	/**
 	 * Set the source property: absolute filename of the DocBook XML file to process
 	 *
-	 * @param   PhingFile $docBookFile
+	 * @param   File $docBookFile
 	 *
 	 * @return  void
 	 */
-	public function setDocBookFile(PhingFile $docBookFile)
+	public function setDocBookFile(File $docBookFile)
 	{
 		$this->docBookFile = $docBookFile;
 	}
@@ -126,11 +134,11 @@ class DocBookToEpubTask extends Task
 	/**
 	 * Set the target property: absolute filename of the resulting .fo file
 	 *
-	 * @param   PhingFile $epubPath
+	 * @param   File $epubPath
 	 *
 	 * @return  void
 	 */
-	public function setEpubPath(PhingFile $epubPath)
+	public function setEpubPath(File $epubPath)
 	{
 		$this->epubPath = $epubPath;
 	}

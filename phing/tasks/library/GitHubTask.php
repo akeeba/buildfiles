@@ -39,7 +39,7 @@ require_once $autoloaderFile;
 /**
  * Abstract base class for GitHub tasks
  */
-abstract class GitHubTask extends Task
+abstract class GitHubTask extends \Phing\Task
 {
 	/**
 	 * The GitHub client object

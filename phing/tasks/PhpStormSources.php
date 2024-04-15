@@ -5,6 +5,12 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use Phing\Project;
+use Phing\Task;
+use PhpStormSourceHandling;
+
 class PhpStormSources extends Task
 {
 	/**

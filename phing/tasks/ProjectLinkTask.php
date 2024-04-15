@@ -5,7 +5,14 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once 'phing/Task.php';
+namespace tasks;
+
+use Akeeba\LinkLibrary\ProjectLinker;
+use Phing\Exception\BuildException;
+use Phing\Project;
+use Phing\Task;
+use RuntimeException;
+
 require_once __DIR__ . '/../../linklib/include.php';
 
 /**
@@ -57,7 +64,7 @@ class ProjectLinkTask extends Task
 			throw new BuildException("Repository folder {$this->repository} is not a valid directory");
 		}
 
-		$linker = new \Akeeba\LinkLibrary\ProjectLinker($this->repository);
+		$linker = new ProjectLinker($this->repository);
 
 		try
 		{

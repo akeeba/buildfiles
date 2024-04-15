@@ -5,18 +5,21 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once 'phing/Task.php';
+namespace tasks;
 
 // Required for Zend Server 6 on Mac OS X
+use Phing\Exception\BuildException;
+use Phing\Task;
+
 putenv("DYLD_LIBRARY_PATH=''");
 
 /**
  * Git latest tree hash to Phing property
  *
- * @version   $Id$
  * @package   akeebabuilder
  * @copyright Copyright (c)2010-2024 Nicholas K. Dionysopoulos / Akeeba Ltd
  * @license   GNU GPL version 3 or, at your option, any later version
+ * @version   $Id$
  * @author    nicholas
  */
 class GitVersionTask extends Task
@@ -58,7 +61,7 @@ class GitVersionTask extends Task
 	/**
 	 * Sets the name of the property to use
 	 *
-	 * @param   string $propertyName
+	 * @param   string  $propertyName
 	 */
 	function setPropertyName($propertyName)
 	{

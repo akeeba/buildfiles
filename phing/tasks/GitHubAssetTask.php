@@ -5,6 +5,10 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use Phing\Exception\BuildException;
+
 if (!class_exists('GitHubTask'))
 {
 	require_once __DIR__ . '/library/GitHubTask.php';
@@ -15,7 +19,7 @@ if (!class_exists('GitHubTask'))
  *
  * See https://developer.github.com/v3/repos/releases/#upload-a-release-asset for information on properties.
  */
-class GitHubAssetTask extends GitHubTask
+class GitHubAssetTask extends \GitHubTask
 {
 	/**
 	 * The ID of the release where the assets will be uploaded to

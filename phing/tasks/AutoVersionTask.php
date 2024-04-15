@@ -5,7 +5,7 @@
  * @license   GNU General Public License version 3, or later
  */
 
-//require_once 'phing/Task.php';
+namespace tasks;
 
 /**
  * Git latest tree hash to Phing property
@@ -16,7 +16,7 @@
  * @license   GNU GPL version 3 or, at your option, any later version
  * @author    nicholas
  */
-class AutoVersionTask extends Task
+class AutoVersionTask extends \Phing\Task
 {
 	/**
 	 * The path to the CHANGELOG file
@@ -74,7 +74,7 @@ class AutoVersionTask extends Task
 	/**
 	 * Populates the Phing property with the most appropriate dev release number.
 	 *
-	 * @throws  BuildException
+	 * @throws  \Phing\Exception\BuildException
 	 */
 	public function main()
 	{

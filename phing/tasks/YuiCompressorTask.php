@@ -5,40 +5,21 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use Phing\Exception\BuildException;
+use Phing\Io\File;
+use Phing\Project;
+use Phing\Task;
+use Phing\Type\FileSet;
+
 /**
  * Part of the Phing tasks collection by Ryan Chouinard.
  *
- * @author Ryan Chouinard <rchouinard@gmail.com>
  * @copyright Copyright (c) 2010 Ryan Chouinard
- * @license New BSD License
- */
-
-/**
- * Defines a Phing task to run the YUI compressor against a set of JavaScript
- * or CSS files.
- *
- * A java binary must be available in the environment PATH for this task to
- * work.
- *
- * To use this task, include it with a taskdef tag in your build.xml file:
- *
- *     <taskdef name="yuic" classname="my.tasks.YuiCompressorTask" />
- *
- * The task is now ready to be used:
- *
- *     <target name="yui-compressor" description="Compress CSS and JavaScript">
- *         <yuic targetdir="path/to/target">
- *             <fileset dir="path/to/source">
- *                 <include name="*.css" />
- *                 <include name="*.js" />
- *             </fileset>
- *         </yuic>
- *     </target>
- *
- * This task makes use of the
- * {@link http://developer.yahoo.com/yui/compressor/ YUI compressor}. Version
- * 2.4.2 of the compiled jar file is bundled with this task, however a different
- * jar file may be specified using the optional jarpath attribute.
+ * @license   New BSD License
+ * @author    Ryan Chouinard <rchouinard@gmail.com>
+ * @deprecated
  */
 class YuiCompressorTask extends Task
 {
@@ -73,8 +54,10 @@ class YuiCompressorTask extends Task
 		);
 
 		$this->_javaPath = 'java';
-		$this->_jarPath = new PhingFile($defaultJarPath);
-		$this->_fileSets = array ();
+		$this->_jarPath  = new File($defaultJarPath);
+		$this->_fileSets = [];
+
+		parent::__construct();
 	}
 
 	/**
@@ -94,15 +77,17 @@ class YuiCompressorTask extends Task
 		$this->_checkTargetDir();
 
 		/* @var $fileSet FileSet */
-		foreach ($this->_fileSets as $fileSet) {
+		foreach ($this->_fileSets as $fileSet)
+		{
 
-			$files = $fileSet->getDirectoryScanner($this->project)
-				->getIncludedFiles();
+			$files = $fileSet->getDirectoryScanner($this->project)->getIncludedFiles();
 
-			foreach ($files as $file) {
+			foreach ($files as $file)
+			{
 
-				$targetDir = new PhingFile($this->_targetDir, dirname($file));
-				if (!$targetDir->exists()) {
+				$targetDir = new File($this->_targetDir, dirname($file));
+				if (!$targetDir->exists())
+				{
 					$targetDir->mkdirs();
 				}
 				unset ($targetDir);
@@ -118,20 +103,19 @@ class YuiCompressorTask extends Task
 					$targetFilename = substr($targetFilename, 0, -3) . '.min.js';
 				}
 
-				$source = new PhingFile($fileSet->getDir($this->project), $file);
-				$target = new PhingFile($this->_targetDir, $targetFilename);
+				$source = new File($fileSet->getDir($this->project), $file);
+				$target = new File($this->_targetDir, $targetFilename);
 
-				$this->log("Processing ${file}");
-				$cmd = escapeshellcmd($this->_javaPath)
-					. ' -jar ' . escapeshellarg($this->_jarPath)
-					. ' -o ' . escapeshellarg($target->getAbsolutePath())
-					. ' ' . escapeshellarg($source->getAbsolutePath());
+				$this->log("Processing {$file}");
+				$cmd = escapeshellcmd($this->_javaPath) . ' -jar ' . escapeshellarg($this->_jarPath) . ' -o '
+				       . escapeshellarg($target->getAbsolutePath()) . ' ' . escapeshellarg($source->getAbsolutePath());
 				$this->log('Executing: ' . $cmd);
 				$this->log('Executing: ' . $cmd, Project::MSG_DEBUG);
 				@exec($cmd, $output, $return);
 
-				if ($return !== 0) {
-					$this->log("Failed processing ${file}!", Project::MSG_ERR);
+				if ($return !== 0)
+				{
+					$this->log("Failed processing {$file}!", Project::MSG_ERR);
 				}
 			}
 		}
@@ -142,42 +126,29 @@ class YuiCompressorTask extends Task
 	 */
 	public function createFileSet()
 	{
-		$num = array_push($this->_fileSets, new FileSet);
+		$num = array_push($this->_fileSets, new FileSet());
+
 		return $this->_fileSets[$num - 1];
 	}
 
-	/**
-	 * @param PhingFile $path
-	 * @return void
-	 */
-	public function setJarPath(PhingFile $path)
+	public function setJarPath(File $path)
 	{
 		$this->_jarPath = $path;
 	}
 
-	/**
-	 * @return void
-	 */
 	protected function _checkJarPath()
 	{
-		if ($this->_jarPath === null) {
-			throw new BuildException(
-				'Path to YUI compressor jar file must be specified',
-				$this->location
-			);
-		} else if (!$this->_jarPath->exists()) {
-			throw new BuildException(
-				'Unable to locate jar file at specified path',
-				$this->location
-			);
+		if ($this->_jarPath === null)
+		{
+			throw new BuildException('Path to YUI compressor jar file must be specified');
+		}
+		elseif (!$this->_jarPath->exists())
+		{
+			throw new BuildException('Unable to locate jar file at specified path');
 		}
 	}
 
-	/**
-	 * @param PhingFile $path
-	 * @return void
-	 */
-	public function setTargetDir(PhingFile $path)
+	public function setTargetDir(File $path)
 	{
 		$this->_targetDir = $path;
 	}
@@ -187,11 +158,9 @@ class YuiCompressorTask extends Task
 	 */
 	protected function _checkTargetDir()
 	{
-		if ($this->_targetDir === null) {
-			throw new BuildException(
-				'Target directory must be specified',
-				$this->location
-			);
+		if ($this->_targetDir === null)
+		{
+			throw new BuildException('Target directory must be specified');
 		}
 	}
 

@@ -5,6 +5,14 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use Phing\Exception\BuildException;
+use Phing\Project;
+use Phing\Task;
+use Phing\Type\FileSet;
+
+/** @deprecated */
 class ClosureTask extends Task
 {
 	/**
@@ -52,6 +60,8 @@ class ClosureTask extends Task
 	public function __construct()
 	{
 		$this->compilerPath = __DIR__ . '/library/closure.jar';
+
+		parent::__construct();
 	}
 
 	/**

@@ -5,6 +5,12 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use GitHubTask;
+use Http\Client\Exception\HttpException;
+use Phing\Exception\BuildException;
+
 if (!class_exists('GitHubTask'))
 {
 	require_once __DIR__ . '/library/GitHubTask.php';
@@ -88,7 +94,7 @@ class GitHubReleaseTask extends GitHubTask
 		parent::main();
 
 		// Convert Phing attributes to GitHub API parameters.
-		$map    = [
+		$map = [
 			'tagName'     => 'tag_name',
 			'commitish'   => 'target_commitish',
 			'releaseName' => 'name',
@@ -335,11 +341,10 @@ class GitHubReleaseTask extends GitHubTask
 		try
 		{
 			$releases = $this->client->api('repo')->releases()->all(
-				$this->organization,
-				$this->repository
+				$this->organization, $this->repository
 			);
 		}
-		catch (Http\Client\Exception\HttpException $e)
+		catch (HttpException $e)
 		{
 			if ($e->getCode() == 404)
 			{
@@ -363,16 +368,14 @@ class GitHubReleaseTask extends GitHubTask
 	/**
 	 * Creates a new release based on the provided GitHub API parameters.
 	 *
-	 * @param   array   $apiParameters  The GitHub API parameters
+	 * @param   array  $apiParameters  The GitHub API parameters
 	 *
 	 * @return  array
 	 */
 	private function createRelease(array $apiParameters)
 	{
 		$release = $this->client->api('repo')->releases()->create(
-			$this->organization,
-			$this->repository,
-			$apiParameters
+			$this->organization, $this->repository, $apiParameters
 		);
 
 		return $release;
@@ -381,18 +384,15 @@ class GitHubReleaseTask extends GitHubTask
 	/**
 	 * Modifies an existing release to the provided GitHub API parameters.
 	 *
-	 * @param   int     $id             The release ID to edit
-	 * @param   array   $apiParameters  The GitHub API parameters
+	 * @param   int    $id             The release ID to edit
+	 * @param   array  $apiParameters  The GitHub API parameters
 	 *
 	 * @return  array
 	 */
 	private function editRelease(int $id, array $apiParameters)
 	{
 		$release = $this->client->api('repo')->releases()->edit(
-			$this->organization,
-			$this->repository,
-			$id,
-			$apiParameters
+			$this->organization, $this->repository, $id, $apiParameters
 		);
 
 		return $release;

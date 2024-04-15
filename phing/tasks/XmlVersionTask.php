@@ -5,6 +5,13 @@
  * @license   GNU General Public License version 3, or later
  */
 
+namespace tasks;
+
+use DirectoryIterator;
+use Phing\Exception\BuildException;
+use Phing\Project;
+use Phing\Task;
+
 /**
  * Class XmlVersionTask
  *
@@ -152,20 +159,23 @@ class XmlVersionTask extends Task
 	{
 		$fileData = @file($filePath);
 
-		$fileData = array_map(function ($line) {
-			if (
-				(strpos(trim($line), '"version"') === 0) &&
-				(strpos($line, ':') !== false)
-			) {
-				$parts = explode(':', $line, 2);
-				$parts[1] = sprintf('"%s",', $this->version);
-				$line = implode(': ', $parts);
-			}
+		$fileData = array_map(
+			function ($line) {
+				if ((strpos(trim($line), '"version"') === 0)
+				    && (strpos($line, ':') !== false))
+				{
+					$parts    = explode(':', $line, 2);
+					$parts[1] = sprintf('"%s",', $this->version);
+					$line     = implode(': ', $parts);
+				}
 
-			return rtrim($line, "\n\r");
-		}, $fileData);
+				return rtrim($line, "\n\r");
+			}, $fileData
+		);
 
 		file_put_contents($filePath, implode("\n", $fileData));
+
+		return true;
 	}
 
 	/**
