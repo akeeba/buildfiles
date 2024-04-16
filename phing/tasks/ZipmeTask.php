@@ -21,7 +21,9 @@ require_once __DIR__ . '/library/ZipmeFileSet.php';
 /**
  * Creates a ZIP archive using ZipArchive.
  *
- * This works around some issues in the original ZipTask which won't let it add empty folders in the archive.
+ * The original ZipTask has a few problems:
+ * - It will not allow empty folders in the archive.
+ * - It does not work with referenced (refid) filesets.
  */
 class ZipmeTask extends MatchingTask
 {

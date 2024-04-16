@@ -14,7 +14,8 @@
 
     <!-- Built in properties -->
     <!-- ### Project Paths -->
-    <property name="dirs.root" value="${phing.dir}/.." />
+	<property name="dirs.root_relative" value="${phing.dir}/.." />
+	<resolvepath propertyName="dirs.root" file="${dirs.root_relative}" />
     <property name="dirs.release" value="${dirs.root}/release" />
     <!-- ### Software and Documentation Paths -->
     <property name="dirs.component" value="${dirs.root}/component" />
