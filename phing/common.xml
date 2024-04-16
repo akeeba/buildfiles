@@ -30,12 +30,6 @@
     <property name="dirs.bin.libxml" value="${dirs.bin}/libxml" />
     <property name="dirs.bin.fop" value="${dirs.bin}/fop" />
     <property name="dirs.bin.dbxsl" value="${dirs.bin}/dbxsl" />
-    <!-- ### Should I include FOF 3.x in the build? -->
-	<property name="build.fof" value="1" />
-    <!-- ### Should I include FOF 4.x in the build? -->
-	<property name="build.fof4" value="0" />
-	<!-- ### Should I include Akeeba Frontend Framework in the build? -->
-	<property name="build.fef" value="0" />
 	<!-- Initialize the site parameter for relink -->
 	<property name="site" value="${build.relink_site}" />
 	<property name="sitewp" value="${build.relink_sitewp}" />
@@ -61,31 +55,33 @@
     <!-- Custom task definitions -->
     <includepath classpath="${phing.dir.common}" />
 
-	<taskdef name="svnadd" classname="tasks\SvnaddTask"/>
-	<taskdef name="svnremove" classname="tasks\SvnremoveTask"/>
 	<taskdef name="xmlversion" classname="tasks\XmlVersionTask"/>
 	<taskdef name="xmlupdate" classname="tasks\XmlUpdateTask"/>
 	<taskdef name="wordpressentrypoint" classname="tasks\WordPressEntryPointTask"/>
-    <taskdef name="GitHubAsset" classname="tasks\GitHubAssetTask" />
-    <taskdef name="GitHubRelease" classname="tasks\GitHubReleaseTask" />
-    <taskdef name="autoversion" classname="tasks\AutoVersionTask" />
-    <taskdef name="bladeawf" classname="tasks\BladeAwfTask" />
-    <taskdef name="bladejoomla" classname="tasks\BladeJoomlaTask" />
-    <taskdef name="closure" classname="tasks\ClosureTask" />
-    <taskdef name="curlsftp" classname="tasks\CurlSftpTask" />
-    <taskdef name="docbook2epub" classname="tasks\DocBookToEpubTask" />
-    <taskdef name="docbook2fo" classname="tasks\DocBookToFoTask" />
-    <taskdef name="gitdate" classname="tasks\GitDateTask" />
-    <taskdef name="gitversion" classname="tasks\GitVersionTask" />
-    <taskdef name="jpa" classname="tasks\JPATask" />
-    <taskdef name="link" classname="tasks\LinkTask" />
-    <taskdef name="phpstormsources" classname="tasks\PhpStormSources" />
-    <taskdef name="projectlink" classname="tasks\ProjectLinkTask" />
-    <taskdef name="relinksite" classname="tasks\RelinkSiteTask" />
-    <taskdef name="relinkwp" classname="tasks\RelinkWPSiteTask" />
+	<taskdef name="GitHubAsset" classname="tasks\GitHubAssetTask" />
+	<taskdef name="GitHubRelease" classname="tasks\GitHubReleaseTask" />
+	<taskdef name="autoversion" classname="tasks\AutoVersionTask" />
+	<taskdef name="bladeawf" classname="tasks\BladeAwfTask" />
+	<taskdef name="curlsftp" classname="tasks\CurlSftpTask" />
+	<taskdef name="docbook2epub" classname="tasks\DocBookToEpubTask" />
+	<taskdef name="docbook2fo" classname="tasks\DocBookToFoTask" />
+	<taskdef name="gitdate" classname="tasks\GitDateTask" />
+	<taskdef name="gitversion" classname="tasks\GitVersionTask" />
+	<taskdef name="jpa" classname="tasks\JPATask" />
+	<taskdef name="link" classname="tasks\LinkTask" />
+	<taskdef name="phpstormsources" classname="tasks\PhpStormSources" />
+	<taskdef name="projectlink" classname="tasks\ProjectLinkTask" />
+	<taskdef name="relinksite" classname="tasks\RelinkSiteTask" />
+	<taskdef name="relinkwp" classname="tasks\RelinkWPSiteTask" />
 	<!-- See https://github.com/rchouinard/phing-tasks/blob/master/classes/rych/tasks/YuiCompressorTask.php -->
+	<taskdef name="zipme" classname="tasks\ZipmeTask" />
+
+	<!-- Deprecated tasks -->
+	<taskdef name="svnadd" classname="tasks\SvnaddTask"/>
+	<taskdef name="svnremove" classname="tasks\SvnremoveTask"/>
+	<taskdef name="bladejoomla" classname="tasks\BladeJoomlaTask" />
+	<taskdef name="closure" classname="tasks\ClosureTask" />
 	<taskdef name="yuicompressor" classname="tasks\YuiCompressorTask" />
-    <taskdef name="zipme" classname="tasks\ZipmeTask" />
 
 	<!--
 	Generate the installation packages and the documentation
@@ -358,7 +354,7 @@
     release.api.endpoint        URL to the ARS API endpoint
     release.api.username        Username for the ARS API
     release.api.password        Password for the ARS API
-    release.api.token           FOF API Token for the ARS API
+    release.api.token           Joomla! API Token for the ARS API
     release.cacert				Absolute path to a custom cacert.pem file
 
     release.core.method              How should I release the CORE version? s3, sftp, ftp, ftps
@@ -810,7 +806,7 @@
 
 	<!--
 	====================================================================================================
-	Tasks - Joomla! packages for FOF 3 extensions
+	Tasks - Joomla! packages
 	====================================================================================================
 	-->
 
@@ -855,7 +851,7 @@
 	<!--
 	Generates the component installation ZIP files for the Pro and Core releases
 	-->
-	<target name="package-com" depends="bladejoomla" description="Builds the component">
+	<target name="package-com" description="Builds the component">
 
 		<!-- Build the Core package -->
 		<phingcall target="package-com-builder">
@@ -1209,312 +1205,9 @@
 	</target>
 
 	<!--
-	Internal task to put the correct FOF 3 package in your release directory as lib_fof30.zip
-
-	If you are building a dev release (the name contains the string dev, rev, git or svn) we'll include a dev build of
-	FOF 3. THIS IS NOT RECOMMENDED. It must only be used for TESTING, never on live sites!
-
-	If you are building a regular, numeric versioned released the latest FOF 3 package available from Akeeba Ltd
-	will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASES.
-	-->
-	<target name="package-fof" description="Copy the FOF 3 installation package to the release directory">
-        <if>
-            <!-- Only build when the build.fof property is true -->
-            <istrue value="${build.fof}" />
-            <then>
-                <if>
-                    <or>
-                        <contains string="${version}" substring="rev" />
-                        <contains string="${version}" substring="dev" />
-                        <contains string="${version}" substring="git" />
-                        <contains string="${version}" substring="svn" />
-                    </or>
-                    <then>
-                        <!-- Start by building a dev build of FOF... -->
-                        <gitversion workingcopy="${dirs.root}/../fof3" propertyname="git.fof.lastrevision" />
-                        <gitdate workingcopy="${dirs.root}/../fof3" propertyname="git.fof.timestamp" />
-                        <property name="fof.version" value="rev${git.fof.lastrevision}-${git.fof.timestamp}" override="true" />
-
-                        <phing phingfile="build.xml" dir="${dirs.root}/../fof3/build" inheritAll="false" target="git">
-                            <property name="dirs.root" value="${dirs.root}/../fof3" />
-                            <property name="version" value="${fof.version}" />
-                        </phing>
-
-                        <!-- ...and copy it to the release directory -->
-                        <copy todir="${dirs.release}" overwrite="true">
-                            <mapper type="regexp" from="^(lib_fof30)(-.*)\.zip$" to="\1.zip" />
-                            <fileset dir="${dirs.root}/../fof3/release">
-                                <include name="lib_fof30-*.zip" />
-                            </fileset>
-                        </copy>
-                    </then>
-                    <else>
-                        <!-- Get the FOF update XML file -->
-                        <httpget url="https://akeeba-cdn.s3.amazonaws.com/updates/fof3_file.xml" dir="${dirs.release}" filename="fof.tmp" followRedirects="true" />
-
-                        <!-- Extract the latest FOF version and download location -->
-                        <xslt todir="${dirs.release}" style="${dirs.root}/../buildfiles/tools/foflatest.xslt">
-                            <mapper type="glob" from="*.tmp" to="*.xml" />
-                            <fileset dir="${dirs.release}">
-                                <include name="fof.tmp" />
-                            </fileset>
-                        </xslt>
-                        <delete file="${dirs.release}/fof.tmp" />
-                        <xmlproperty file="${dirs.release}/fof.xml" />
-                        <echo message="Latest FOF version ${latestFof.version} - ${latestFof.download}" />
-
-                        <!-- Make sure there is a cache directory, or create it -->
-                        <if>
-                            <available file="${dirs.root}/../buildfiles/cache" />
-                            <else>
-                                <mkdir dir="${dirs.root}/../buildfiles/cache" />
-                            </else>
-                        </if>
-
-                        <!-- Get the FOF version from the cache -->
-                        <property name="cache_file_exists" value="0" />
-                        <available file="${dirs.root}/../buildfiles/cache/fof.xml" property="cache_file_exists" value="1" />
-
-                        <if>
-                            <equals arg1="${cache_file_exists}" arg2="1" />
-                            <then>
-                                <xmlproperty file="${dirs.root}/../buildfiles/cache/fof.xml" keepRoot="false" prefix="fofcache." />
-                            </then>
-                            <else>
-                                <property name="fofcache.version" value="0.0.0" />
-                                <property name="fofcache.download" value="" />
-                            </else>
-                        </if>
-
-                        <echo message="${latestFof.version} - ${fofcache.version}" />
-
-                        <!-- If there is a newer version of FOF available, download it to the cache and update the cached versions -->
-                        <php expression="version_compare('${latestFof.version}','${fofcache.version}','gt') ? 1 : 0" returnProperty="has_newer_fof" />
-                        <if>
-                            <equals arg1="${has_newer_fof}" arg2="1" />
-                            <then>
-                                <httpget url="${latestFof.download}" dir="${dirs.root}/../buildfiles/cache" filename="lib_fof30.zip" followRedirects="true" />
-                                <copy file="${dirs.release}/fof.xml" todir="${dirs.root}/../buildfiles/cache" />
-                            </then>
-                        </if>
-
-                        <!-- Copy the cached FOF release -->
-                        <copy file="${dirs.root}/../buildfiles/cache/lib_fof30.zip" todir="${dirs.release}" />
-
-                        <!-- Clean up -->
-                        <delete file="${dirs.release}/fof.xml" />
-                    </else>
-                </if>
-            </then>
-        </if>
-	</target>
-
-	<!--
-Internal task to put the correct FOF 4.x package in your release directory as lib_fof40.zip
-
-If you are building a dev release (the name contains the string dev, rev, git or svn) we'll include a dev build of
-FOF 4. THIS IS NOT RECOMMENDED. It must only be used for TESTING, never on live sites!
-
-If you are building a regular, numeric versioned released the latest FOF 4 package available from Akeeba Ltd
-will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASES.
--->
-	<target name="package-fof4" description="Copy the FOF 4 installation package to the release directory">
-		<if>
-			<!-- Only build when the build.fof4 property is true -->
-			<istrue value="${build.fof4}" />
-			<then>
-				<if>
-					<or>
-						<contains string="${version}" substring="rev" />
-						<contains string="${version}" substring="dev" />
-						<contains string="${version}" substring="git" />
-						<contains string="${version}" substring="svn" />
-					</or>
-					<then>
-						<!-- Start by building a dev build of FOF 4.x... -->
-						<gitversion workingcopy="${dirs.root}/../fof4" propertyname="git.fof4.lastrevision" />
-						<gitdate workingcopy="${dirs.root}/../fof4" propertyname="git.fof4.timestamp" />
-						<property name="fof4.version" value="rev${git.fof4.lastrevision}-${git.fof4.timestamp}" override="true" />
-
-						<phing phingfile="build.xml" dir="${dirs.root}/../fof4/build" inheritAll="false" target="git">
-							<property name="dirs.root" value="${dirs.root}/../fof4" />
-							<property name="version" value="${fof4.version}" />
-						</phing>
-
-						<!-- ...and copy it to the release directory -->
-						<copy todir="${dirs.release}" overwrite="true">
-							<mapper type="regexp" from="^(lib_fof40)(-.*)\.zip$" to="\1.zip" />
-							<fileset dir="${dirs.root}/../fof4/release">
-								<include name="lib_fof40-*.zip" />
-							</fileset>
-						</copy>
-					</then>
-					<else>
-						<!-- Get the FOF update XML file -->
-						<httpget url="https://akeeba-cdn.s3.amazonaws.com/updates/fof4_file.xml" dir="${dirs.release}" filename="fof4.tmp" followRedirects="true" />
-
-						<!-- Extract the latest FOF version and download location -->
-						<xslt todir="${dirs.release}" style="${dirs.root}/../buildfiles/tools/fof4latest.xslt">
-							<mapper type="glob" from="*.tmp" to="*.xml" />
-							<fileset dir="${dirs.release}">
-								<include name="fof4.tmp" />
-							</fileset>
-						</xslt>
-						<delete file="${dirs.release}/fof4.tmp" />
-						<xmlproperty file="${dirs.release}/fof4.xml" />
-						<echo message="Latest FOF 4 version ${latestFof4.version} - ${latestFof4.download}" />
-
-						<!-- Make sure there is a cache directory, or create it -->
-						<if>
-							<available file="${dirs.root}/../buildfiles/cache" />
-							<else>
-								<mkdir dir="${dirs.root}/../buildfiles/cache" />
-							</else>
-						</if>
-
-						<!-- Get the FOF version from the cache -->
-						<property name="cache_file_exists" value="0" />
-						<available file="${dirs.root}/../buildfiles/cache/fof4.xml" property="cache_file_exists" value="1" />
-
-						<if>
-							<equals arg1="${cache_file_exists}" arg2="1" />
-							<then>
-								<xmlproperty file="${dirs.root}/../buildfiles/cache/fof4.xml" keepRoot="false" prefix="fof4cache." />
-							</then>
-							<else>
-								<property name="fof4cache.version" value="0.0.0" />
-								<property name="fof4cache.download" value="" />
-							</else>
-						</if>
-
-						<echo message="${latestFof4.version} - ${fof4cache.version}" />
-
-						<!-- If there is a newer version of FOF available, download it to the cache and update the cached versions -->
-						<php expression="version_compare('${latestFof4.version}','${fof4cache.version}','gt') ? 1 : 0" returnProperty="has_newer_fof4" />
-						<if>
-							<equals arg1="${has_newer_fof4}" arg2="1" />
-							<then>
-								<httpget url="${latestFof4.download}" dir="${dirs.root}/../buildfiles/cache" filename="lib_fof40.zip" followRedirects="true" />
-								<copy file="${dirs.release}/fof4.xml" todir="${dirs.root}/../buildfiles/cache" />
-							</then>
-						</if>
-
-						<!-- Copy the cached FOF release -->
-						<copy file="${dirs.root}/../buildfiles/cache/lib_fof40.zip" todir="${dirs.release}" />
-
-						<!-- Clean up -->
-						<delete file="${dirs.release}/fof4.xml" />
-					</else>
-				</if>
-			</then>
-		</if>
-	</target>
-
-	<!--
-	Internal task to put the correct Akeeba Frontend Framework package in your release directory as file_fef.zip
-
-	If you are building a dev release (the name contains the string dev, rev, git or svn) we'll include a dev build of
-	FEF. THIS IS NOT RECOMMENDED. It must only be used for TESTING, never on live sites!
-
-	If you are building a regular, numeric versioned released the latest FEF package available from Akeeba Ltd
-	will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASES.
-	-->
-	<target name="package-fef" description="Copy the Akeeba Frontend Framework installation package to the release directory">
-		<if>
-			<!-- Only build when the build.fef property is true -->
-			<istrue value="${build.fef}" />
-			<then>
-				<if>
-					<or>
-						<contains string="${version}" substring="rev" />
-						<contains string="${version}" substring="dev" />
-						<contains string="${version}" substring="git" />
-						<contains string="${version}" substring="svn" />
-					</or>
-					<then>
-						<!-- Start by building a dev build of FEF... -->
-						<gitversion workingcopy="${dirs.root}/../fef" propertyname="git.fef.lastrevision" />
-						<gitdate workingcopy="${dirs.root}/../fef" propertyname="git.fef.timestamp" />
-						<property name="fef.version" value="rev${git.fef.lastrevision}-${git.fef.timestamp}" override="true" />
-
-						<phing phingfile="build.xml" dir="${dirs.root}/../fef/build" inheritAll="false" target="git">
-							<property name="dirs.root" value="${dirs.root}/../fef" />
-							<property name="version" value="${fef.version}" />
-						</phing>
-
-						<!-- ...and copy it to the release directory -->
-						<copy todir="${dirs.release}" overwrite="true">
-							<mapper type="regexp" from="^(file_fef)(-.*)\.zip$" to="\1.zip" />
-							<fileset dir="${dirs.root}/../fef/release">
-								<include name="file_fef-*.zip" />
-							</fileset>
-						</copy>
-					</then>
-					<else>
-						<!-- Get the FEF update XML file -->
-						<httpget url="https://akeeba-cdn.s3.amazonaws.com/updates/fef.xml" dir="${dirs.release}" filename="fef.tmp" followRedirects="true" />
-
-						<!-- Extract the latest FEF version and download location -->
-						<xslt todir="${dirs.release}" style="${dirs.root}/../buildfiles/tools/feflatest.xslt">
-							<mapper type="glob" from="*.tmp" to="*.xml" />
-							<fileset dir="${dirs.release}">
-								<include name="fef.tmp" />
-							</fileset>
-						</xslt>
-						<delete file="${dirs.release}/fef.tmp" />
-						<xmlproperty file="${dirs.release}/fef.xml" />
-						<echo message="Latest Akeeba FEF version ${latestFEF.version} - ${latestFEF.download}" />
-
-						<!-- Make sure there is a cache directory, or create it -->
-						<if>
-							<available file="${dirs.root}/../buildfiles/cache" />
-							<else>
-								<mkdir dir="${dirs.root}/../buildfiles/cache" />
-							</else>
-						</if>
-
-						<!-- Get the FEF version from the cache -->
-						<property name="fef_cache_file_exists" value="0" />
-						<available file="${dirs.root}/../buildfiles/cache/fef.xml" property="fef_cache_file_exists" value="1" />
-
-						<if>
-							<equals arg1="${fef_cache_file_exists}" arg2="1" />
-							<then>
-								<xmlproperty file="${dirs.root}/../buildfiles/cache/fef.xml" keepRoot="false" prefix="fefcache." />
-							</then>
-							<else>
-								<property name="fefcache.version" value="0.0.0" />
-								<property name="fefcache.download" value="" />
-							</else>
-						</if>
-
-						<echo message="${latestFEF.version} - ${fefcache.version}" />
-
-						<!-- If there is a newer version of FEF available, download it to the cache and update the cached versions -->
-						<php expression="version_compare('${latestFEF.version}','${fefcache.version}','gt') ? 1 : 0" returnProperty="has_newer_fef" />
-						<if>
-							<equals arg1="${has_newer_fef}" arg2="1" />
-							<then>
-								<httpget url="${latestFEF.download}" dir="${dirs.root}/../buildfiles/cache" filename="file_fef.zip" followRedirects="true" />
-								<copy file="${dirs.release}/fef.xml" todir="${dirs.root}/../buildfiles/cache" />
-							</then>
-						</if>
-
-						<!-- Copy the cached FEF release -->
-						<copy file="${dirs.root}/../buildfiles/cache/file_fef.zip" todir="${dirs.release}" />
-
-						<!-- Clean up -->
-						<delete file="${dirs.release}/fef.xml" />
-					</else>
-				</if>
-			</then>
-		</if>
-	</target>
-
-	<!--
 	Builds all Core and Pro packages (pkg_something*.zip)
 	-->
-	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup-properties, package-com, package-files, package-modules, package-plugins, package-fof, package-fof4, package-fef">
+	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup-properties, package-com, package-files, package-modules, package-plugins">
 
 		<!-- Build the Core package -->
 		<phingcall target="package-pkg-builder">
@@ -1636,35 +1329,6 @@ will be included instead. THIS IS THE ONLY RECOMMENDED METHOD FOR PUBLIC RELEASE
 		<zipme basedir="${dirs.release}" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
 			<fileset refid="${build.refid}" />
 		</zipme>
-	</target>
-
-    <target name="lang">
-        <echo message="The lang task is obsolete." />
-    </target>
-
-	<target name="bladejoomla" description="Precompiles Blade templates for Joomla! components">
-		<!-- Remove the PrecompiledTemplates folders from the front- and backend -->
-		<delete quiet="true" includeemptydirs="true" dir="${dirs.component}/frontend/PrecompiledTemplates" />
-		<delete quiet="true" includeemptydirs="true" dir="${dirs.component}/backend/PrecompiledTemplates" />
-
-		<if>
-			<equals arg1="${build.precompile_blade}" arg2="1" />
-			<then>
-				<!-- Precompile all Blade templates -->
-				<bladejoomla site="${site}" component="com_${build.component}">
-					<dirset dir="${dirs.component}/frontend">
-						<include name="views" />
-						<include name="View" />
-						<include name="ViewTemplates" />
-					</dirset>
-					<dirset dir="${dirs.component}/backend">
-						<include name="views" />
-						<include name="View" />
-						<include name="ViewTemplates" />
-					</dirset>
-				</bladejoomla>
-			</then>
-		</if>
 	</target>
 
     <target name="info">
