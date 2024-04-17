@@ -12,8 +12,6 @@ if (!defined('IS_WINDOWS'))
 	define('IS_WINDOWS', substr(PHP_OS, 0, 3) == 'WIN');
 }
 
-require_once 'phing/Task.php';
-
 /**
  * This task will add any new file to the version control
  *

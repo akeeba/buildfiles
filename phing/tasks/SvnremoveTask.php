@@ -12,8 +12,6 @@ if (!defined('IS_WINDOWS'))
 	define('IS_WINDOWS', substr(PHP_OS, 0, 3) == 'WIN');
 }
 
-require_once 'phing/Task.php';
-
 /**
  * This task will remove obsolete files from a SVN working copy.
  * This is a tricky task since we have several symlinks, the easiest way is to copy all files to a temporary directory

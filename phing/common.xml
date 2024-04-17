@@ -1353,4 +1353,8 @@
 	<target name="phpstorm" description="Update PhpStorm's directory to namespace mapping">
 		<phpstormsources repository="${dirs.root}" />
 	</target>
+
+	<target name="lang">
+		<!-- This is a dummy task -->
+	</target>
 </project>
