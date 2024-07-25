@@ -27,8 +27,6 @@
     <property name="dirs.templates" value="${phing.dir}/templates" />
     <!-- ### DocBook XML Stylesheet Paths -->
     <property name="dirs.bin" value="${phing.dir.common}/bin" />
-    <property name="dirs.bin.libxml" value="${dirs.bin}/libxml" />
-    <property name="dirs.bin.fop" value="${dirs.bin}/fop" />
     <property name="dirs.bin.dbxsl" value="${dirs.bin}/dbxsl" />
 	<!-- Initialize the site parameter for relink -->
 	<property name="site" value="${build.relink_site}" />
@@ -64,7 +62,6 @@
 	<taskdef name="bladeawf" classname="tasks\BladeAwfTask" />
 	<taskdef name="curlsftp" classname="tasks\CurlSftpTask" />
 	<taskdef name="docbook2epub" classname="tasks\DocBookToEpubTask" />
-	<taskdef name="docbook2fo" classname="tasks\DocBookToFoTask" />
 	<taskdef name="gitdate" classname="tasks\GitDateTask" />
 	<taskdef name="gitversion" classname="tasks\GitVersionTask" />
 	<taskdef name="jpa" classname="tasks\JPATask" />
@@ -75,13 +72,6 @@
 	<taskdef name="relinkwp" classname="tasks\RelinkWPSiteTask" />
 	<!-- See https://github.com/rchouinard/phing-tasks/blob/master/classes/rych/tasks/YuiCompressorTask.php -->
 	<taskdef name="zipme" classname="tasks\ZipmeTask" />
-
-	<!-- Deprecated tasks -->
-	<taskdef name="svnadd" classname="tasks\SvnaddTask"/>
-	<taskdef name="svnremove" classname="tasks\SvnremoveTask"/>
-	<taskdef name="bladejoomla" classname="tasks\BladeJoomlaTask" />
-	<taskdef name="closure" classname="tasks\ClosureTask" />
-	<taskdef name="yuicompressor" classname="tasks\YuiCompressorTask" />
 
 	<!--
 	Generate the installation packages and the documentation
@@ -160,72 +150,8 @@
     docs.input      DocBook XML filename relative to dirs.documentation
     -->
     <target name="docbook-pdf" description="Render documentation in PDF format">
-        <basename property="docs.output" file="${docs.input}" suffix=".xml" />
-
-		<if>
-			<equals arg1="${docs.php_xsltproc}" arg2="1" />
-			<then>
-				<!-- Use the xsltproc included in your current PHP installation -->
-				<docbook2fo xsltRoot="${dirs.bin.dbxsl}"
-							docBookFile="${dirs.documentation}/${docs.input}"
-							foFile="${dirs.release}/${docs.output}.fo"
-				/>
-			</then>
-			<else>
-				<!-- Use the xsltproc executable -->
-				<exec executable="${docs.xsltproc}" dir="${dirs.documentation}" checkreturn="true">
-					<arg value="--nonet" />
-					<arg value="--xinclude" />
-					<arg value="--novalid" />
-
-					<arg value="--stringparam" />
-					<arg value="body.start.indent" />
-					<arg value="0" />
-
-					<arg value="--stringparam" />
-					<arg value="variablelist.term.break.after 1" />
-					<arg value="1" />
-
-					<arg value="--stringparam" />
-					<arg value="variablelist.term.separator" />
-					<arg value="&quot;&quot;" />
-
-					<arg value="--stringparam" />
-					<arg value="variablelist.max.termlength" />
-					<arg value="12" />
-
-					<arg value="--stringparam" />
-					<arg value="section.autolabel" />
-					<arg value="1" />
-
-					<arg value="--stringparam" />
-					<arg value="toc.section.depth" />
-					<arg value="5" />
-
-					<arg value="--stringparam" />
-					<arg value="fop1.extensions" />
-					<arg value="1" />
-
-					<arg value="--output" />
-					<arg file="${dirs.release}/${docs.output}.fo" />
-
-					<arg file="${dirs.bin.dbxsl}/fo/docbook.xsl" />
-
-					<arg file="${dirs.documentation}/${docs.input}" />
-				</exec>
-			</else>
-		</if>
-
-        <exec executable="${dirs.bin.fop}/fop" dir="${dirs.documentation}" checkreturn="true">
-            <arg value="-fo" />
-            <arg file="${dirs.release}/${docs.output}.fo" />
-
-            <arg value="-pdf" />
-            <arg file="${dirs.release}/${docs.output}.pdf" />
-        </exec>
-
-        <delete file="${dirs.release}/${docs.output}.fo" quiet="true" />
-    </target>
+		<echo>The docbook-pdf task is no longer available.</echo>
+	</target>
 
     <!--
     Transforms a DocBook XML file to ePub format
