@@ -795,22 +795,25 @@
 	Generates the component installation ZIP files for the Pro and Core releases
 	-->
 	<target name="package-com" description="Builds the component">
-
-		<!-- Build the Core package -->
-		<phingcall target="package-com-builder">
-			<property name="build.is_pro" value="0" />
-		</phingcall>
-
 		<if>
-			<equals arg1="${build.has_pro}" arg2="1" />
+			<available file="${dirs.component}" type="dir" />
 			<then>
-				<!-- Build the Pro package -->
+				<!-- Build the Core package -->
 				<phingcall target="package-com-builder">
-					<property name="build.is_pro" value="1" />
+					<property name="build.is_pro" value="0" />
 				</phingcall>
+
+				<if>
+					<equals arg1="${build.has_pro}" arg2="1" />
+					<then>
+						<!-- Build the Pro package -->
+						<phingcall target="package-com-builder">
+							<property name="build.is_pro" value="1" />
+						</phingcall>
+					</then>
+				</if>
 			</then>
 		</if>
-
 	</target>
 
 	<!--
@@ -893,12 +896,17 @@
 	Builds all the modules found in the modules/site and modules/admin folders of your repository
 	-->
 	<target name="package-modules" description="Build all modules">
-		<foreach param="dirname" absparam="absname" target="package-module-folder" inheritall="true" inheritrefs="true">
-			<fileset dir="${dirs.modules}">
-				<type type="dir" />
-				<depth max="0" min="0" />
-			</fileset>
-		</foreach>
+		<if>
+			<available file="${dirs.modules}" type="dir" />
+			<then>
+				<foreach param="dirname" absparam="absname" target="package-module-folder" inheritall="true" inheritrefs="true">
+					<fileset dir="${dirs.modules}">
+						<type type="dir" />
+						<depth max="0" min="0" />
+					</fileset>
+				</foreach>
+			</then>
+		</if>
 	</target>
 
 	<!--
@@ -970,12 +978,17 @@
 	Builds all the plugins found in the plugins/* folders of your repository
 	-->
 	<target name="package-plugins" description="Build all plugins">
-		<foreach param="dirname" absparam="absname" target="package-plugin-folder" inheritall="true" inheritrefs="true">
-			<fileset dir="${dirs.plugins}">
-				<type type="dir" />
-				<depth max="0" min="0" />
-			</fileset>
-		</foreach>
+		<if>
+			<available file="${dirs.plugins}" type="dir" />
+			<then>
+				<foreach param="dirname" absparam="absname" target="package-plugin-folder" inheritall="true" inheritrefs="true">
+					<fileset dir="${dirs.plugins}">
+						<type type="dir" />
+						<depth max="0" min="0" />
+					</fileset>
+				</foreach>
+			</then>
+		</if>
 	</target>
 
 	<!--
@@ -1050,32 +1063,47 @@
 	-->
 	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup-properties, package-com, package-modules, package-plugins">
 
-		<!-- Build the Core package -->
-		<phingcall target="package-pkg-builder">
-			<property name="build.is_pro" value="0" />
-		</phingcall>
-
-		<if>
-			<equals arg1="${build.has_pro}" arg2="1" />
-			<then>
-				<!-- Build the Pro package -->
+		<trycatch property="build.package.fail" reference="build.package.fail.reference">
+			<try>
+				<!-- Build the Core package -->
 				<phingcall target="package-pkg-builder">
-					<property name="build.is_pro" value="1" />
+					<property name="build.is_pro" value="0" />
 				</phingcall>
 
-				<!-- Clean up -->
-				<delete>
-					<fileset refid="package-core" />
-					<fileset refid="package-pro" />
-				</delete>
-			</then>
-			<else>
-				<!-- Clean up -->
-				<delete>
-					<fileset refid="package" />
-				</delete>
-			</else>
-		</if>
+				<if>
+					<equals arg1="${build.has_pro}" arg2="1" />
+					<then>
+						<!-- Build the Pro package -->
+						<phingcall target="package-pkg-builder">
+							<property name="build.is_pro" value="1" />
+						</phingcall>
+
+						<!-- Clean up -->
+						<delete>
+							<fileset refid="package-core" />
+							<fileset refid="package-pro" />
+						</delete>
+					</then>
+					<else>
+						<!-- Clean up -->
+						<delete>
+							<fileset refid="package" />
+						</delete>
+					</else>
+				</if>
+			</try>
+
+			<catch>
+				<if>
+					<equals arg1="${build.allow_joomla_package_fail}" arg2="0" />
+					<then>
+						<throw refid="build.package.fail.reference" />
+					</then>
+				</if>
+
+				<echo>Joomla! package extension skipped over.</echo>
+			</catch>
+		</trycatch>
 
 	</target>
 
