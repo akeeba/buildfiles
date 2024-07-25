@@ -85,17 +85,33 @@ Get-ChildItem -Directory | ForEach-Object {
 		}
 		
 		"link" {
-			if (Test-Path build)
+			if (Test-Path build.xml)
 			{
 				Write-Host "Linking " -Foreground Red -NoNewline
 				Write-Host $d -Foreground Cyan								
-				
+
+				phing link
+			}
+
+			if (Test-Path build)
+			{
+				Write-Host "Linking " -Foreground Red -NoNewline
+				Write-Host $d -Foreground Cyan
+
 				cd build
 				phing link
 			}
 		}
 		
 		"build" {
+			if (Test-Path build.xml)
+			{
+				Write-Host "Building " -Foreground Red -NoNewline
+				Write-Host $d -Foreground Cyan
+
+				phing git
+			}
+
 			if (Test-Path build)
 			{
 				Write-Host "Building " -Foreground Red -NoNewline
@@ -107,6 +123,14 @@ Get-ChildItem -Directory | ForEach-Object {
 		}
 
 		"relink" {
+			if (Test-Path build.xml)
+			{
+				Write-Host "Relinking " -Foreground Red -NoNewline
+				Write-Host $d -Foreground Cyan
+
+				phing relink -Dsite="${sitepath}"
+			}
+
 			if (Test-Path build)
 			{
 				Write-Host "Relinking " -Foreground Red -NoNewline
@@ -143,7 +167,6 @@ Get-ChildItem -Directory | ForEach-Object {
 			git config --unset core.fileMode
 			git config --unset core.filemode
 			git config --unset core.autocrlf
-
 		}
 		
 		"default" {

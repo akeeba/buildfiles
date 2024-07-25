@@ -130,6 +130,11 @@ for d in */; do
     ;;
 
   build)
+    if [ -f build.xml ]; then
+      echo -e "\n"$COLOR_BROWN"Building $COLOR_CYAN$d"$COLOR_NC
+      phing git
+    fi
+
     if [ -d build ]; then
       echo -e "\n"$COLOR_BROWN"Building $COLOR_CYAN$d"$COLOR_NC
       cd build
@@ -138,6 +143,11 @@ for d in */; do
     ;;
 
   relink)
+    if [ -f build.xml ]; then
+      echo -e "\n"$COLOR_BROWN"Relinking $COLOR_CYAN$d"$COLOR_NC
+      phing relink -Dsite=$2
+    fi
+
     if [ -d build ]; then
       echo -e "\n"$COLOR_BROWN"Relinking $COLOR_CYAN$d"$COLOR_NC
       cd build
@@ -146,6 +156,11 @@ for d in */; do
     ;;
 
   update)
+    if [ -f build.xml ]; then
+      echo -e "\n"$COLOR_BROWN"Pushing updates for $COLOR_CYAN$d"$COLOR_NC
+      phing update
+    fi
+
     if [ -d build ]; then
       echo -e "\n"$COLOR_BROWN"Pushing updates for $COLOR_CYAN$d"$COLOR_NC
       cd build
