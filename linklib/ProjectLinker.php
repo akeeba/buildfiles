@@ -175,7 +175,11 @@ class ProjectLinker
 		$path = realpath($path);
 		$file = $path . '/build/templates/link.php';
 
-		$this->loadConfig($file);
+		if (file_exists($file))
+		{
+			$this->loadConfig($file);
+		}
+
 		$this->setRepositoryRoot($path);
 	}
 
