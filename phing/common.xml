@@ -947,93 +947,6 @@
 	</target>
 
 	<!--
-	Builds the CLI file packages
-	-->
-	<target name="package-files" description="file package for CLI files">
-		<if>
-			<equals arg1="${build.has_cli}" arg2="1" />
-			<then>
-				<!-- Build the Core file package -->
-				<phingcall target="package-files-builder">
-					<property name="build.is_pro" value="0" />
-				</phingcall>
-
-				<if>
-					<equals arg1="${build.has_pro}" arg2="1" />
-					<then>
-						<!-- Build the Pro file package -->
-						<phingcall target="package-files-builder">
-							<property name="build.is_pro" value="1" />
-						</phingcall>
-					</then>
-				</if>
-			</then>
-		</if>
-	</target>
-
-	<!--
-	Internal builder task to build one file installation package (Core or Pro) at a time
-	-->
-	<target name="package-files-builder" description="file package for CLI files">
-		<!-- Determine the name of the XML manifest template file, package file and the fileset reference ID -->
-		<if>
-			<not>
-				<equals arg1="${build.has_pro}" arg2="1" />
-			</not>
-			<then>
-				<!-- No Pro/Core version, do not use a suffix -->
-				<!-- XML Manifest name: file_something.xml -->
-				<property name="build.template_xml" value="file_${build.component}.xml" />
-				<!-- Package name: file_something.zip -->
-				<property name="build.package_name" value="file_${build.component}.zip" />
-				<!-- Fileset reference ID: cli -->
-				<property name="build.refid" value="cli" />
-			</then>
-			<else>
-				<!-- Distinct Pro / Core versions, use a suffix -->
-				<if>
-					<equals arg1="${build.is_pro}" arg2="1" />
-					<then>
-						<property name="build.suffix" value="pro" />
-					</then>
-					<else>
-						<property name="build.suffix" value="core" />
-					</else>
-				</if>
-				<!-- XML Manifest name: file_something_core.xml -->
-				<property name="build.template_xml" value="file_${build.component}_${build.suffix}.xml" />
-				<!-- Package name: file_something-core.zip -->
-				<property name="build.package_name" value="file_${build.component}-${build.suffix}.zip" />
-				<!-- Fileset reference ID: cli-core -->
-				<property name="build.refid" value="cli-${build.suffix}" />
-			</else>
-		</if>
-
-		<!-- If ${dirs.templates}/${build.template_xml} not exists do nothing -->
-		<if>
-			<available file="${dirs.templates}/${build.template_xml}" />
-			<then>
-				<copy file="${dirs.templates}/${build.template_xml}" tofile="${dirs.component}/cli/file_${build.component}.xml" overwrite="true">
-					<filterchain>
-						<replacetokens begintoken="##" endtoken="##">
-							<token key="DATE" value="${build.date}" />
-							<token key="VERSION" value="${version}" />
-						</replacetokens>
-					</filterchain>
-				</copy>
-
-				<zipme basedir="${dirs.component}/cli" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
-					<fileset refid="${build.refid}" />
-				</zipme>
-			</then>
-			<else>
-				<delete file="${dirs.release}/${build.package_name}" failonerror="false" />
-			</else>
-		</if>
-
-	</target>
-
-	<!--
 	Builds all the modules found in the modules/site and modules/admin folders of your repository
 	-->
 	<target name="package-modules" description="Build all modules">
@@ -1192,7 +1105,7 @@
 	<!--
 	Builds all Core and Pro packages (pkg_something*.zip)
 	-->
-	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup-properties, package-com, package-files, package-modules, package-plugins">
+	<target name="package-pkg" description="Installation package (pkg_something)" depends="new-release, setup-properties, package-com, package-modules, package-plugins">
 
 		<!-- Build the Core package -->
 		<phingcall target="package-pkg-builder">
