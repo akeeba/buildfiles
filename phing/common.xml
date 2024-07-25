@@ -4,7 +4,9 @@
   ~ @copyright Copyright (c)2010-2024 Nicholas K. Dionysopoulos / Akeeba Ltd
   ~ @license   GNU General Public License version 3, or later
   -->
-<project name="common" basedir="." description="Common phing tasks for building Joomla! extensions"
+<project name="common"
+		 basedir="."
+		 description="Common phing tasks for building Joomla! extensions"
          default="git">
     <!--
     You need to import this file in your main Phing file like this:
@@ -12,43 +14,41 @@
     <import file="${phing.dir}/../../buildfiles/phing/common.xml" />
     -->
 
-    <!-- Built in properties -->
+    <!-- Built-in properties -->
     <!-- ### Project Paths -->
-	<property name="dirs.root_relative" value="${phing.dir}/.." />
-	<resolvepath propertyName="dirs.root" file="${dirs.root_relative}" />
-    <property name="dirs.release" value="${dirs.root}/release" />
+	<resolvepath propertyName="dirs.root" file="${phing.dir}" />
+	<resolvepath propertyName="dirs.build" file="${dirs.root}/build" />
+
+	<property name="dirs.release" value="${dirs.root}/release" />
+	<property name="dirs.templates" value="${dirs.build}/templates" />
+	<property name="dirs.documentation" value="${dirs.root}/documentation" />
+	<property name="dirs.composer" value="${dirs.root}" />
+
     <!-- ### Software and Documentation Paths -->
     <property name="dirs.component" value="${dirs.root}/component" />
     <property name="dirs.modules" value="${dirs.root}/modules" />
     <property name="dirs.plugins" value="${dirs.root}/plugins" />
-    <property name="dirs.documentation" value="${dirs.root}/documentation" />
-    <property name="dirs.composer" value="${dirs.root}" />
-    <property name="bin.composer" value="${dirs.root}/../buildfiles/composer.phar" />
-    <property name="dirs.templates" value="${phing.dir}/templates" />
+
     <!-- ### DocBook XML Stylesheet Paths -->
-    <property name="dirs.bin" value="${phing.dir.common}/bin" />
-    <property name="dirs.bin.dbxsl" value="${dirs.bin}/dbxsl" />
+    <property name="dirs.bin.dbxsl" value="${phing.dir.common}/bin/dbxsl" />
 	<!-- Initialize the site parameter for relink -->
 	<property name="site" value="${build.relink_site}" />
 	<property name="sitewp" value="${build.relink_sitewp}" />
-
-    <!-- ### Version numbers -->
-    <property name="version" value="git" />
 
 	<!-- ### Overrideable parameters -->
 	<property name="build.package_base_name" value="${build.component}" />
 
     <!-- Load externally defined properties -->
-    <!-- ### Default properties, located next to the common.xml file -->
+    <!-- ### Default properties -->
     <property file="${phing.dir.common}/default.properties" />
-    <!-- ### Common properties, stored one level above the repository's root -->
-    <property file="${phing.dir}/../../build.properties" override="true" />
-	<!-- ### Common properties, OS-dependent, stored one level above the repository's root -->
-	<property file="${phing.dir}/../../build.${host.os}.properties" override="true" />
-    <!-- ### Project properties -->
-    <property file="${phing.dir}/build.properties" override="true" />
-    <!-- ### Overrides, per project -->
-    <property file="${phing.dir}/override.properties" override="true" />
+    <!-- ### Common properties, above the working copy's root -->
+    <property file="${phing.dir}/../build.properties" override="true" />
+	<property file="${phing.dir}/../build.${host.os}.properties" override="true" />
+    <!-- ### Project properties and property overrides -->
+    <property file="${dirs.build}/build.properties" override="true" />
+	<property file="${dirs.build}/build.${host.os}.properties" override="true" />
+    <property file="${dirs.build}/override.properties" override="true" />
+    <property file="${dirs.build}/override.${host.os}.properties" override="true" />
 
     <!-- Custom task definitions -->
     <includepath classpath="${phing.dir.common}" />
@@ -102,10 +102,6 @@
             <equals arg1="${version}" arg2="git" />
             <then>
 				<autoversion workingCopy="${dirs.root}" propertyName="version" />
-                <!--
-				<gitversion workingcopy="${dirs.root}" propertyname="git.lastrevision" />
-                <property name="version" value="rev${git.lastrevision}" override="true" />
-                -->
             </then>
         </if>
     </target>
@@ -116,11 +112,38 @@
     This task depends on link and composer-install to make sure that you have a sane environment before you start
     building a package.
     -->
-    <target name="new-release" description="Create afresh the release directory"
+    <target name="new-release" description="Create a new release directory"
 			depends="composer-install,link">
         <delete dir="${dirs.release}" quiet="true" includeemptydirs="true" />
         <mkdir dir="${dirs.release}" />
     </target>
+
+	<!--
+	Build the documentation.
+
+	Override with the actual build calls, e.g.
+
+	<phingcall target="docbook-epub">
+		<property name="docs.input" value="subdirectory_under_documentation/user-guide.xml"/>
+	</phingcall>
+	-->
+	<target name="documentation">
+		<echo message="Documentation build is not set up for this repository." />
+	</target>
+
+	<!--
+	Deploy the documentation to a Joomla! site which uses Akeeba DocImport.
+
+	Override with the actual deployment call, e.g.
+
+	<phingcall target="docbook-deploy">
+		<property name="docsdeploy.path.source" value="subdirectory_under_documentation"/>
+		<property name="docsdeploy.path.target" value="my-docs"/>
+	</phingcall>
+	-->
+	<target name="docsdeploy">
+		<echo message="Documentation deployment is not set up for this repository." />
+	</target>
 
     <!--
     Installs Composer dependencies.
@@ -143,15 +166,6 @@
 			</then>
 		</if>
     </target>
-
-    <!--
-    Transforms a DocBook XML file to PDF format
-
-    docs.input      DocBook XML filename relative to dirs.documentation
-    -->
-    <target name="docbook-pdf" description="Render documentation in PDF format">
-		<echo>The docbook-pdf task is no longer available.</echo>
-	</target>
 
     <!--
     Transforms a DocBook XML file to ePub format
@@ -1176,9 +1190,5 @@
 
 	<target name="phpstorm" description="Update PhpStorm's directory to namespace mapping">
 		<phpstormsources repository="${dirs.root}" />
-	</target>
-
-	<target name="lang">
-		<!-- This is a dummy task -->
 	</target>
 </project>

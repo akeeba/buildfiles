@@ -303,9 +303,9 @@ class ProjectLinker
 			throw new \RuntimeException("The link configuration file $file does not include the necessary arrays");
 		}
 
-		$this->setHardlinkFiles($hardlink_files);
-		$this->setSymlinkFiles($symlink_files);
-		$this->setSymlinkFolders($symlink_folders);
+		$this->setHardlinkFiles($hardlink_files ?? []);
+		$this->setSymlinkFiles($symlink_files ?? []);
+		$this->setSymlinkFolders($symlink_folders ?? []);
 
 		return $this;
 	}
