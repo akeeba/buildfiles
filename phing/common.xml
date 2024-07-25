@@ -42,8 +42,8 @@
     <!-- ### Default properties -->
     <property file="${phing.dir.common}/default.properties" />
     <!-- ### Common properties, above the working copy's root -->
-    <property file="${phing.dir}/../build.properties" override="true" />
-	<property file="${phing.dir}/../build.${host.os}.properties" override="true" />
+    <property file="${dirs.root}/../build.properties" override="true" />
+	<property file="${dirs.root}/../build.${host.os}.properties" override="true" />
     <!-- ### Project properties and property overrides -->
     <property file="${dirs.build}/build.properties" override="true" />
 	<property file="${dirs.build}/build.${host.os}.properties" override="true" />
@@ -161,7 +161,7 @@
 				<composer composer="${bin.composer}" command="install" php="${system.php_cli}">
 					<arg value="-d" />
 					<arg path="${dirs.composer}" />
-					<arg value="--no-dev" />
+					<arg value="${composer.dev_argument}" />
 				</composer>
 			</then>
 		</if>
