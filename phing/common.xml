@@ -944,21 +944,6 @@
 		<zipme basedir="${dirs.component}" destfile="${dirs.release}/${build.package_name}" includeemptydirs="true">
 			<fileset refid="${build.refid}" />
 		</zipme>
-
-		<!-- TODO Rewrite Self-Check to support packages instead of old-style components -->
-		<if>
-			<equals arg1="${build.selfcheck}" arg2="1" />
-			<then>
-				<!-- Add self-check file -->
-				<exec executable="${system.php_cli}" dir="${dirs.root}" passthru="true" checkreturn="true">
-					<arg file="${phing.dir}/build/tools/makeselfcheck.php " />
-					<arg file="${dirs.release}/${build.package_name}.zip" />
-					<arg value="com_${build.component}" />
-					<arg value="${version}" />
-					<arg value="${build.date}" />
-				</exec>
-			</then>
-		</if>
 	</target>
 
 	<!--
