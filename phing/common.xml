@@ -678,29 +678,32 @@
             </then>
         </if>
 
-        <if>
-            <isset property="ftpdeploy.pattern.pro" />
-            <then>
-                <echo>Uploading Professional release</echo>
-                <curlsftp
-                        host="${scp.host}"
-                        port="${scp.port}"
-                        username="${scp.username}"
-                        password="${scp.password}"
-                        pubkeyfile="${scp.pubkeyfile}"
-                        privkeyfile="${scp.privkeyfile}"
-                        privkeyfilepassphrase="${scp.privkeyfilepassphrase}"
-                        todir="${scp.dir}/${ftpdeploy.path.pro}/${version}"
-                        level="debug">
-                    <fileset dir="${dirs.root}">
-                        <include name="CHANGELOG"/>
-                    </fileset>
-                    <fileset dir="${dirs.release}">
-                        <include name="${ftpdeploy.pattern.pro}"/>
-                    </fileset>
-                </curlsftp>
-            </then>
-        </if>
+		<if>
+			<and>
+				<isset property="ftpdeploy.pattern.pro" />
+				<equals arg1="${build.has_pro}" arg2="1" />
+			</and>
+			<then>
+				<echo>Uploading Professional release</echo>
+				<curlsftp
+						host="${scp.host}"
+						port="${scp.port}"
+						username="${scp.username}"
+						password="${scp.password}"
+						pubkeyfile="${scp.pubkeyfile}"
+						privkeyfile="${scp.privkeyfile}"
+						privkeyfilepassphrase="${scp.privkeyfilepassphrase}"
+						todir="${scp.dir}/${ftpdeploy.path.pro}/${version}"
+						level="debug">
+					<fileset dir="${dirs.root}">
+						<include name="CHANGELOG"/>
+					</fileset>
+					<fileset dir="${dirs.release}">
+						<include name="${ftpdeploy.pattern.pro}"/>
+					</fileset>
+				</curlsftp>
+			</then>
+		</if>
     </target>
 
     <!--

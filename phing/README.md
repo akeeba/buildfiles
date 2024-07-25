@@ -451,3 +451,5 @@ ftpdeploy.path.pro=files/dev/examplepro
 ```
 
 Running `phing ftpdeploy` will build your software (just like running `phing git`), then it will use the properties above to upload your dev builds to your site, along with the `CHANGELOG` file.
+
+> ℹ️ The Pro version's dev release will only be uploaded if `build.has_pro` is set to 1.
