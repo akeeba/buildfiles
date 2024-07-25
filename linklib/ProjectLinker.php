@@ -298,11 +298,6 @@ class ProjectLinker
 		/** @var   array  $symlink_folders  Symbolic link folders, set up by the file */
 		include $file;
 
-		if (!isset($hardlink_files) || !isset($symlink_files) || !isset($symlink_folders))
-		{
-			throw new \RuntimeException("The link configuration file $file does not include the necessary arrays");
-		}
-
 		$this->setHardlinkFiles($hardlink_files ?? []);
 		$this->setSymlinkFiles($symlink_files ?? []);
 		$this->setSymlinkFolders($symlink_folders ?? []);
