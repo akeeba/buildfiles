@@ -252,10 +252,11 @@ class Component extends AbstractScanner
 	{
 		$result->siteFolder = $this->extensionRoot;
 		$allFilesTags       = $xmlDoc->getElementsByTagName('files');
+		$allFoldersTags     = $xmlDoc->getElementsByTagName('folders');;
 
-		if ($allFilesTags->length < 2)
+		if ($allFilesTags->length < 1 && $allFoldersTags->length < 1)
 		{
-			throw new RuntimeException("Not enough <files> tags found in XML manifest for {$result->extension}");
+			throw new RuntimeException("Not enough <files> or <folders> tags found in XML manifest for {$result->extension}");
 		}
 
 		$siteFilesTag  = null;
